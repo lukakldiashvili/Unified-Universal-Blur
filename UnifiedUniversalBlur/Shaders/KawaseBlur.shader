@@ -41,11 +41,11 @@ Shader "Unified/KawaseBlur"
                 float i = offset;
 
                 float4 col;
-                col.rgb = tex2D(blurTexture, uv).rgb;
-                col.rgb += tex2D(blurTexture, uv + float2(i, i) * res).rgb;
-                col.rgb += tex2D(blurTexture, uv + float2(i, -i) * res).rgb;
-                col.rgb += tex2D(blurTexture, uv + float2(-i, i) * res).rgb;
-                col.rgb += tex2D(blurTexture, uv + float2(-i, -i) * res).rgb;
+                col.rgb = tex2D(blurTexture, saturate(uv)).rgb;
+                col.rgb += tex2D(blurTexture, saturate(uv + float2(i, i) * res)).rgb;
+                col.rgb += tex2D(blurTexture, saturate(uv + float2(i, -i) * res)).rgb;
+                col.rgb += tex2D(blurTexture, saturate(uv + float2(-i, i) * res)).rgb;
+                col.rgb += tex2D(blurTexture, saturate(uv + float2(-i, -i) * res)).rgb;
                 col.rgb /= 5.0f;
 
                 col.a = 1;
