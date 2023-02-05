@@ -19,11 +19,12 @@ Features:
 
 ### Installation
 
-This repository works with upm. Simply add it via package manager (get the link from <>Code button in top right corner or view releases).
-To specify any version, add #version number like this: giturl#1.0.0 
+This repository works with upm. 
+<br>Simply add it via package manager (get the link from <>Code button in top right corner or view releases).
+<br>To specify any version, add #version number like this: giturl#1.0.0 
 <br>(more information using upm at: https://docs.unity3d.com/Manual/upm-git.html)
 
-Manual: It is also possible to download zip and put it anywhere in the project.
+Manual: It is also possible to download zip and put its content anywhere in the project.
 <br>
 
 ### Setup
