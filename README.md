@@ -15,7 +15,11 @@ Features:
 - Blurs both opaque and transparent objects (make sure correct setting is selected)
 - Blurs Post-Processing and any other image effect which is rendered before blur (based on render feature order)
 
-<br>
+Tested and working for unity versions:
+- 2022.2
+- 2021.3
+- 2020.3
+
 
 ### Installation
 
