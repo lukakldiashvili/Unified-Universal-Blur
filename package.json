@@ -1,0 +1,24 @@
+{
+    "name": "com.unify.unified-universal-blur",
+    "displayName": "Unified Universal Blur",
+    "description": "Unified Universal Blur is a package that allows you to use the blur effect in URP.",
+    "version": "0.1.0",
+    "unity": "2020.3",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lukakldiashvili/Unified-Universal-Blur.git"
+    },
+    "author": {
+        "name": "Unify - Luka Kldiashvili",
+        "email": "contact@lukakldiashvili.com",
+        "url": "https://github.com/lukakldiashvili"
+    },
+    "dependencies": {},
+    "keywords": [
+        "unify",
+        "unified",
+        "blur",
+        "universal"
+    ]
+}
