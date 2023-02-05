@@ -1,3 +1,8 @@
+<p align="center">
+  <img width="700" align="center" alt="uub_01" src="https://user-images.githubusercontent.com/42884387/216822248-f43c7da4-a94e-4540-8b77-1151e6321b99.png">
+</p>
+
+
 ## Unified Universal Blur - URP Blur effect for Unity
 
 Unified Universal Blur allows you to display blurred version of the screen, usually for translucent UI effects.
