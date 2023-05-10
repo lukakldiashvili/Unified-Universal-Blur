@@ -1,13 +1,11 @@
 {
-    "name": "Unified.UniversalBlur.Editor",
+    "name": "Unified.Universal.Blur",
     "rootNamespace": "",
     "references": [
-        "GUID:15fc0a57446b3144c949da3e2b9737a9",
-        "GUID:3eae0364be2026648bf74846acb8a731"
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Core.Runtime"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
