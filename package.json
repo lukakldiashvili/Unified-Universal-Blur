@@ -14,7 +14,9 @@
         "email": "contact@lukakldiashvili.com",
         "url": "https://github.com/lukakldiashvili"
     },
-    "dependencies": {},
+    "dependencies": {
+        "com.unity.render-pipelines.universal": "^7.0.0"
+    },
     "keywords": [
         "unify",
         "unified",
