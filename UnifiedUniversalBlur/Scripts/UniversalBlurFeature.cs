@@ -80,7 +80,6 @@ namespace Unified.Universal.Blur
             passData.effectMaterial = passMaterial;
             passData.passIndex = passIndex;
             passData.requiresColor = requiresColor;
-            passData.isBeforeTransparents = injectedBeforeTransparents;
             passData.profilingSampler ??= new ProfilingSampler("FullScreenPassRendererFeature");
             passData.scale = scale;
             passData.iterations = iterations;

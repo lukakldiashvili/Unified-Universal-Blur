@@ -70,12 +70,7 @@ namespace Unified.Universal.Blur
             if (renderingData.cameraData.isSceneViewCamera && passData.disableInSceneView)
                 return;
 
-            CommandBuffer cmd =
-			#if UNITY_2022_1_OR_NEWER
-			renderingData.commandBuffer;
-			#else
-                CommandBufferPool.Get("FullScreenPassRendererFeature");
-			#endif
+            CommandBuffer cmd = CommandBufferPool.Get("FullScreenPassRendererFeature");
 
             var cameraData = renderingData.cameraData;
 
@@ -87,25 +82,26 @@ namespace Unified.Universal.Blur
             ProcessEffect(ref context);
 		#endif
 
+            context.ExecuteCommandBuffer(cmd);
+            CommandBufferPool.Release(cmd);
+
             void ProcessEffect(ref ScriptableRenderContext context)
             {
                 if (passData.requiresColor)
                 {
                     var source =
-					#if UNITY_2022_1_OR_NEWER
-					passData.isBeforeTransparents
-					? cameraData.renderer.GetCameraColorBackBuffer(cmd)
-					: cameraData.renderer.cameraColorTargetHandle;
-					#else
+					    #if UNITY_2022_1_OR_NEWER
+                        cameraData.renderer.cameraColorTargetHandle;
+					    #else
                         cameraData.renderer.cameraColorTarget;
-					#endif
+					    #endif
 
                     // --- Start
-				#if UNITY_2022_1_OR_NEWER
-				Blitter.BlitCameraTexture(cmd, source, tmpRT1);
-				#else
-                    cmd.Blit(source, tmpRT1);
-				#endif
+				    #if UNITY_2022_1_OR_NEWER
+				        Blitter.BlitCameraTexture(cmd, source, tmpRT1);
+				    #else
+                        cmd.Blit(source, tmpRT1);
+				    #endif
 
                     void DoBlit()
                     {
@@ -129,9 +125,6 @@ namespace Unified.Universal.Blur
                     cmd.SetGlobalTexture(k_GlobalFullScreenBlurTexture, tmpRT2);
                     // --- End
                 }
-
-                context.ExecuteCommandBuffer(cmd);
-                cmd.Clear();
             }
         }
 
@@ -141,7 +134,6 @@ namespace Unified.Universal.Blur
             internal int passIndex;
             internal bool requiresColor;
             internal bool disableInSceneView;
-            internal bool isBeforeTransparents;
 
             public ProfilingSampler profilingSampler;
 
