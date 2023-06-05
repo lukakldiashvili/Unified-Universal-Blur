@@ -30,11 +30,11 @@ namespace Unified.Universal.Blur
             rtDesc.height = Mathf.RoundToInt(rtDesc.height / downsample);
 
 		#if UNITY_2022_1_OR_NEWER
-		    RenderingUtils.ReAllocateIfNeeded(ref m_tmpRT1, rtDesc, name: "_PassRT1");
-		    RenderingUtils.ReAllocateIfNeeded(ref m_tmpRT2, rtDesc, name: "_PassRT2");
+		    RenderingUtils.ReAllocateIfNeeded(ref m_tmpRT1, rtDesc, name: "_PassRT1", wrapMode: TextureWrapMode.Clamp);
+		    RenderingUtils.ReAllocateIfNeeded(ref m_tmpRT2, rtDesc, name: "_PassRT2", wrapMode: TextureWrapMode.Clamp);
 		#else
-            RenderEmulation.ReAllocateIfNeeded(ref m_tmpRT1, rtDesc, name: "_PassRT1");
-            RenderEmulation.ReAllocateIfNeeded(ref m_tmpRT2, rtDesc, name: "_PassRT2");
+            RenderEmulation.ReAllocateIfNeeded(ref m_tmpRT1, rtDesc, name: "_PassRT1", wrapMode: TextureWrapMode.Clamp);
+            RenderEmulation.ReAllocateIfNeeded(ref m_tmpRT2, rtDesc, name: "_PassRT2", wrapMode: TextureWrapMode.Clamp);
 		#endif
 
             m_PassData.tmpRT1 = m_tmpRT1;
