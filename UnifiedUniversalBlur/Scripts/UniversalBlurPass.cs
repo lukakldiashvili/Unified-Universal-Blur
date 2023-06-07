@@ -9,13 +9,9 @@ namespace Unified.Universal.Blur
     {
         private const string k_GlobalFullScreenBlurTexture = "_GlobalFullScreenBlurTexture";
 
-        private static readonly int m_BlitTextureShaderID = Shader.PropertyToID("_BlitTexture");
         private static readonly int m_KawaseOffsetID = Shader.PropertyToID("_KawaseOffset");
 
         private PassData m_PassData;
-
-        private RTHandle m_tmpRT1;
-        private RTHandle m_tmpRT2;
 
         public void Setup(Action<PassData> passDataOptions, float downsample, in RenderingData renderingData)
         {
@@ -30,21 +26,20 @@ namespace Unified.Universal.Blur
             rtDesc.height = Mathf.RoundToInt(rtDesc.height / downsample);
 
 		#if UNITY_2022_1_OR_NEWER
-		    RenderingUtils.ReAllocateIfNeeded(ref m_tmpRT1, rtDesc, name: "_PassRT1", wrapMode: TextureWrapMode.Clamp);
-		    RenderingUtils.ReAllocateIfNeeded(ref m_tmpRT2, rtDesc, name: "_PassRT2", wrapMode: TextureWrapMode.Clamp);
-		#else
-            RenderEmulation.ReAllocateIfNeeded(ref m_tmpRT1, rtDesc, name: "_PassRT1", wrapMode: TextureWrapMode.Clamp);
-            RenderEmulation.ReAllocateIfNeeded(ref m_tmpRT2, rtDesc, name: "_PassRT2", wrapMode: TextureWrapMode.Clamp);
+		    RenderingUtils.ReAllocateIfNeeded(ref m_PassData.tmpRT1, rtDesc, name: "_PassRT1", wrapMode: TextureWrapMode.Clamp);
+		    RenderingUtils.ReAllocateIfNeeded(ref m_PassData.tmpRT2, rtDesc, name: "_PassRT2", wrapMode: TextureWrapMode.Clamp);
 		#endif
-
-            m_PassData.tmpRT1 = m_tmpRT1;
-            m_PassData.tmpRT2 = m_tmpRT2;
         }
 
         public void Dispose()
         {
-            m_tmpRT1?.Release();
-            m_tmpRT2?.Release();
+            #if UNITY_2022_1_OR_NEWER
+            if (m_PassData != null)
+            {
+                m_PassData.tmpRT1.Release();
+                m_PassData.tmpRT2.Release();
+            }
+            #endif
         }
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
@@ -79,7 +74,13 @@ namespace Unified.Universal.Blur
 			ProcessEffect(ref context);
 		}
 		#else
+            tmpRT1 = RenderTexture.GetTemporary(renderingData.cameraData.cameraTargetDescriptor);
+            tmpRT2 = RenderTexture.GetTemporary(renderingData.cameraData.cameraTargetDescriptor);
+            
             ProcessEffect(ref context);
+            
+            RenderTexture.ReleaseTemporary(tmpRT1);
+            RenderTexture.ReleaseTemporary(tmpRT2);
 		#endif
 
             context.ExecuteCommandBuffer(cmd);
@@ -140,8 +141,13 @@ namespace Unified.Universal.Blur
             public float scale;
             public int iterations;
 
-            public RTHandle tmpRT1;
-            public RTHandle tmpRT2;
+            public
+            #if UNITY_2022_1_OR_NEWER
+            RTHandle
+            #else
+                RenderTexture
+            #endif
+                tmpRT1, tmpRT2;
         }
     }
 }
