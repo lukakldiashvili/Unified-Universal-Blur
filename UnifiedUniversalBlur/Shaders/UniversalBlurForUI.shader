@@ -97,15 +97,21 @@ Shader "Unify/UniversalBlurForUI"
 
             fixed4 frag(v2f IN) : SV_Target
             {
+                half4 mainTexColor = tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd;
+                
                 half4 color = (tex2D(_GlobalFullScreenBlurTexture, IN.screenPos) + _TextureSampleAdd) * IN.color;
 
                 #ifdef UNITY_UI_CLIP_RECT
-                color.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
+                mainTexColor.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
                 #endif
-
+                
                 #ifdef UNITY_UI_ALPHACLIP
-                clip (color.a - 0.001);
+                clip (mainTexColor.a - 0.001);
                 #endif
+                
+                color *= mainTexColor;
+
+
 
                 return color;
             }

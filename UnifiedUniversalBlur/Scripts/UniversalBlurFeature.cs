@@ -20,8 +20,8 @@ namespace Unified.Universal.Blur
         public InjectionPoint injectionPoint = InjectionPoint.AfterRenderingPostProcessing;
 
         [Space]
+        [Range(0f, 1f)] public float intensity = 1.0f;
         [Range(1f, 10f)] public float downsample = 2.0f;
-
         [Range(0f, 5f)] public float scale = .5f;
         [Range(1, 20)] public int iterations = 6;
 
@@ -78,6 +78,7 @@ namespace Unified.Universal.Blur
         void SetupPassData(UniversalBlurPass.PassData passData)
         {
             passData.effectMaterial = passMaterial;
+            passData.intensity = intensity;
             passData.passIndex = passIndex;
             passData.requiresColor = requiresColor;
             passData.profilingSampler ??= new ProfilingSampler("FullScreenPassRendererFeature");

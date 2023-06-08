@@ -19,15 +19,15 @@ namespace Unified.Universal.Blur
 
             passDataOptions?.Invoke(m_PassData);
 
-            RenderTextureDescriptor rtDesc = renderingData.cameraData.cameraTargetDescriptor;
-            rtDesc.depthBufferBits = (int)DepthBits.None;
+            m_PassData.rtDesc = renderingData.cameraData.cameraTargetDescriptor;
+            m_PassData.rtDesc.depthBufferBits = (int)DepthBits.None;
 
-            rtDesc.width = Mathf.RoundToInt(rtDesc.width / downsample);
-            rtDesc.height = Mathf.RoundToInt(rtDesc.height / downsample);
+            m_PassData.rtDesc.width = Mathf.RoundToInt(m_PassData.rtDesc.width / downsample);
+            m_PassData.rtDesc.height = Mathf.RoundToInt(m_PassData.rtDesc.height / downsample);
 
 		#if UNITY_2022_1_OR_NEWER
-		    RenderingUtils.ReAllocateIfNeeded(ref m_PassData.tmpRT1, rtDesc, name: "_PassRT1", wrapMode: TextureWrapMode.Clamp);
-		    RenderingUtils.ReAllocateIfNeeded(ref m_PassData.tmpRT2, rtDesc, name: "_PassRT2", wrapMode: TextureWrapMode.Clamp);
+		    RenderingUtils.ReAllocateIfNeeded(ref m_PassData.tmpRT1, m_PassData.rtDesc, name: "_PassRT1", wrapMode: TextureWrapMode.Clamp);
+		    RenderingUtils.ReAllocateIfNeeded(ref m_PassData.tmpRT2, m_PassData.rtDesc, name: "_PassRT2", wrapMode: TextureWrapMode.Clamp);
 		#endif
         }
 
@@ -74,8 +74,8 @@ namespace Unified.Universal.Blur
 			ProcessEffect(ref context);
 		}
 		#else
-            tmpRT1 = RenderTexture.GetTemporary(renderingData.cameraData.cameraTargetDescriptor);
-            tmpRT2 = RenderTexture.GetTemporary(renderingData.cameraData.cameraTargetDescriptor);
+            tmpRT1 = RenderTexture.GetTemporary(passData.rtDesc);
+            tmpRT2 = RenderTexture.GetTemporary(passData.rtDesc);
             
             ProcessEffect(ref context);
             
@@ -114,12 +114,17 @@ namespace Unified.Universal.Blur
                         cmd.SetGlobalFloat(m_KawaseOffsetID, 1.5f);
                         DoBlit();
 
-                        for (var i = 1; i <= passData.iterations; i++)
+                        if (passData.intensity > 0f)
                         {
-                            cmd.SetGlobalFloat(m_KawaseOffsetID, 0.5f + i * scale);
-                            DoBlit();
+                            for (var i = 1; i <= passData.iterations; i++)
+                            {
+                                var offset = (0.5f + i * scale) * passData.intensity;
+                            
+                                cmd.SetGlobalFloat(m_KawaseOffsetID, offset);
+                                DoBlit();
 
-                            (tmpRT1, tmpRT2) = (tmpRT2, tmpRT1);
+                                (tmpRT1, tmpRT2) = (tmpRT2, tmpRT1);
+                            }
                         }
                     }
 
@@ -138,8 +143,11 @@ namespace Unified.Universal.Blur
 
             public ProfilingSampler profilingSampler;
 
+            public float intensity;
             public float scale;
             public int iterations;
+
+            public RenderTextureDescriptor rtDesc;
 
             public
             #if UNITY_2022_1_OR_NEWER
