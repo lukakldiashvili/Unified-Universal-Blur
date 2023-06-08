@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="700" align="center" alt="uub_01" src="https://user-images.githubusercontent.com/42884387/216822248-f43c7da4-a94e-4540-8b77-1151e6321b99.png">
+  <img width="700" alt="blur_demo_01" src="https://github.com/lukakldiashvili/Unified-Universal-Blur/assets/42884387/cebc5905-269c-46fe-9ee6-81d13658b494">
 </p>
 
 
