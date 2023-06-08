@@ -28,7 +28,10 @@ namespace Unified.Universal.Blur
 		#if UNITY_2022_1_OR_NEWER
 		    RenderingUtils.ReAllocateIfNeeded(ref m_PassData.tmpRT1, m_PassData.rtDesc, name: "_PassRT1", wrapMode: TextureWrapMode.Clamp);
 		    RenderingUtils.ReAllocateIfNeeded(ref m_PassData.tmpRT2, m_PassData.rtDesc, name: "_PassRT2", wrapMode: TextureWrapMode.Clamp);
-		#endif
+        #else
+            m_PassData.tmpRT1 ??= new RenderTexture(m_PassData.rtDesc);
+            m_PassData.tmpRT2 ??= new RenderTexture(m_PassData.rtDesc);
+        #endif
         }
 
         public void Dispose()
@@ -39,6 +42,9 @@ namespace Unified.Universal.Blur
                 m_PassData.tmpRT1.Release();
                 m_PassData.tmpRT2.Release();
             }
+            #else 
+            m_PassData.tmpRT1.Release();
+            m_PassData.tmpRT2.Release();
             #endif
         }
 
@@ -62,26 +68,30 @@ namespace Unified.Universal.Blur
                 return;
 
             // if is scene camera and we want to disable in scene view
-            if (renderingData.cameraData.isSceneViewCamera && passData.disableInSceneView)
-                return;
+            if (renderingData.cameraData.isSceneViewCamera)
+            {
+                // renderingData.cameraData.is
+                // return;
+            }
 
             CommandBuffer cmd = CommandBufferPool.Get("FullScreenPassRendererFeature");
 
             var cameraData = renderingData.cameraData;
-
-		#if UNITY_2022_1_OR_NEWER
-		using (new ProfilingScope(cmd, passData.profilingSampler)) {
-			ProcessEffect(ref context);
-		}
-		#else
-            tmpRT1 = RenderTexture.GetTemporary(passData.rtDesc);
-            tmpRT2 = RenderTexture.GetTemporary(passData.rtDesc);
             
-            ProcessEffect(ref context);
-            
-            RenderTexture.ReleaseTemporary(tmpRT1);
-            RenderTexture.ReleaseTemporary(tmpRT2);
-		#endif
+            if (renderingData.cameraData.isSceneViewCamera)
+            {
+                cmd.SetGlobalTexture(k_GlobalFullScreenBlurTexture, tmpRT2);
+            }
+            else
+            {
+		        #if UNITY_2022_1_OR_NEWER
+		        using (new ProfilingScope(cmd, passData.profilingSampler)) {
+			        ProcessEffect(ref context);
+		        }
+		        #else
+                ProcessEffect(ref context);
+		        #endif
+            }
 
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
