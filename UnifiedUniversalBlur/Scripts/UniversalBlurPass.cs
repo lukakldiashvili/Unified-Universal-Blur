@@ -108,16 +108,11 @@ namespace Unified.Universal.Blur
 					    #endif
 
                     // --- Start
-				    #if UNITY_2022_1_OR_NEWER
-				        Blitter.BlitCameraTexture(cmd, source, tmpRT1);
-				    #else
-                        cmd.Blit(source, tmpRT1);
-				    #endif
+                    cmd.Blit(source, tmpRT1);
 
                     void DoBlit()
                     {
                         cmd.Blit(tmpRT1, tmpRT2, passMaterial, 0);
-                        // Blitter.BlitCameraTexture(cmd, tmpRT1, tmpRT2, passMaterial, 0);
                     }
 
                     {
