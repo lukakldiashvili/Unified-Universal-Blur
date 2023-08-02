@@ -13,24 +13,21 @@ Currently intended use cases include (other scenarios may not work):
 - UI image component with blur material, displaying blurred 3D world (Canvas set to 'Screen Space - Overlay').
 
 Features:
-- Kawase blur
 - Blurs both opaque and transparent objects (make sure correct setting is selected)
 - Blurs Post-Processing and any other image effect which is rendered before blur (based on render feature order)
 
-Tested and working for unity versions:
-- 2022.2
-- 2021.3
-- 2020.3
+Tested and working for unity versions: `2020.3, 2021.3 2022.3`
 
 
 ### Installation
 
-This repository works with upm. 
-<br>Simply add it via package manager (get the link from <>Code button in top right corner or view releases).
-<br>To specify any version, add #version number like this: giturl#1.0.0 
-<br>(more information using upm at: https://docs.unity3d.com/Manual/upm-git.html)
+#### upm
+Simply add this repository via package manager's `Add package from git URL...` (for a specific version visit [releases](https://github.com/lukakldiashvili/Unified-Universal-Blur/releases)).
+<br>
+(more information about upm: https://docs.unity3d.com/Manual/upm-git.html)
 
-Manual: It is also possible to download zip and put its content anywhere in the project.
+#### Manual
+It is also possible to download zip and put its content anywhere in the project.
 <br>
 
 ### Setup
