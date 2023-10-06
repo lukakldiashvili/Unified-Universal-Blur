@@ -27,32 +27,37 @@ namespace Unified.Universal.Blur
 
 
         // Hidden by scope because of no need
-        private ScriptableRenderPassInput requirements = ScriptableRenderPassInput.Color;
+        private ScriptableRenderPassInput _requirements = ScriptableRenderPassInput.Color;
 
         // Hidden by scope because of incorrect behaviour in the editor
         private bool disableInSceneView = true;
 
-        private UniversalBlurPass fullScreenPass;
-        private bool requiresColor;
-        private bool injectedBeforeTransparents;
+        private UniversalBlurPass _fullScreenPass;
+        private bool _requiresColor;
+        private bool _injectedBeforeTransparents;
+
+        private UniversalBlurPass.PassData _PassData;
+
 
         /// <inheritdoc/>
         public override void Create()
         {
-            fullScreenPass = new UniversalBlurPass();
-            fullScreenPass.renderPassEvent = (RenderPassEvent)injectionPoint;
+            _fullScreenPass = new UniversalBlurPass();
+            _fullScreenPass.renderPassEvent = (RenderPassEvent)injectionPoint;
 
-            ScriptableRenderPassInput modifiedRequirements = requirements;
+            ScriptableRenderPassInput modifiedRequirements = _requirements;
 
-            requiresColor = (requirements & ScriptableRenderPassInput.Color) != 0;
-            injectedBeforeTransparents = injectionPoint <= InjectionPoint.BeforeRenderingTransparents;
+            _requiresColor = (_requirements & ScriptableRenderPassInput.Color) != 0;
+            _injectedBeforeTransparents = injectionPoint <= InjectionPoint.BeforeRenderingTransparents;
 
-            if (requiresColor && !injectedBeforeTransparents)
+            if (_requiresColor && !_injectedBeforeTransparents)
             {
                 modifiedRequirements ^= ScriptableRenderPassInput.Color;
             }
 
-            fullScreenPass.ConfigureInput(modifiedRequirements);
+            _fullScreenPass.ConfigureInput(modifiedRequirements);
+
+            _PassData = new ();
         }
 
         /// <inheritdoc/>
@@ -64,15 +69,16 @@ namespace Unified.Universal.Blur
                 return;
             }
 
-            fullScreenPass.Setup(SetupPassData, downsample, renderingData);
+            SetupPassData(_PassData);
+            _fullScreenPass.Setup(_PassData, downsample, renderingData);
 
-            renderer.EnqueuePass(fullScreenPass);
+            renderer.EnqueuePass(_fullScreenPass);
         }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            fullScreenPass.Dispose();
+            _fullScreenPass.Dispose();
         }
 
         void SetupPassData(UniversalBlurPass.PassData passData)
@@ -80,7 +86,7 @@ namespace Unified.Universal.Blur
             passData.effectMaterial = passMaterial;
             passData.intensity = intensity;
             passData.passIndex = passIndex;
-            passData.requiresColor = requiresColor;
+            passData.requiresColor = _requiresColor;
             passData.profilingSampler ??= new ProfilingSampler("FullScreenPassRendererFeature");
             passData.scale = scale;
             passData.iterations = iterations;

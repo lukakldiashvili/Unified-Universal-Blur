@@ -13,11 +13,9 @@ namespace Unified.Universal.Blur
 
         private PassData m_PassData;
 
-        public void Setup(Action<PassData> passDataOptions, float downsample, in RenderingData renderingData)
+        public void Setup(PassData passData, float downsample, in RenderingData renderingData)
         {
-            m_PassData ??= new PassData();
-
-            passDataOptions?.Invoke(m_PassData);
+            m_PassData = passData;
 
             m_PassData.rtDesc = renderingData.cameraData.cameraTargetDescriptor;
             m_PassData.rtDesc.depthBufferBits = (int)DepthBits.None;
