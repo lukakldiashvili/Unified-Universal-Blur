@@ -7,8 +7,13 @@ namespace Unified.Universal.Blur
 {
     class UniversalBlurPass : ScriptableRenderPass
     {
+        
+        private const string k_PassName = "Unified Universal Blur";
+        
         private static readonly int m_KawaseOffsetID = Shader.PropertyToID("_KawaseOffset");
         private static readonly int m_globalFullScreenBlurTexture = Shader.PropertyToID("_GlobalFullScreenBlurTexture");
+        
+        private ProfilingSampler m_ProfilingSampler = new(k_PassName);
 
         private PassData m_PassData;
 
@@ -43,12 +48,16 @@ namespace Unified.Universal.Blur
                 m_PassData.tmpRT2.Release();
         }
 
+
+        // public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
+        // { }
+
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             ExecutePass(m_PassData, ref renderingData, ref context);
         }
 
-        private static void ExecutePass(PassData passData, ref RenderingData renderingData, ref ScriptableRenderContext context)
+        private void ExecutePass(PassData passData, ref RenderingData renderingData, ref ScriptableRenderContext context)
         {
             var passMaterial = passData.effectMaterial;
             var tmpRT1 = passData.tmpRT1;
@@ -64,30 +73,25 @@ namespace Unified.Universal.Blur
 
             if (renderingData.cameraData.isSceneViewCamera)
             {
+                #if UNITY_EDITOR
+                // For better preview experience in editor, we just use a gray texture
+                Shader.SetGlobalTexture(m_globalFullScreenBlurTexture, Texture2D.linearGrayTexture);
+                #endif
                 return;
             }
 
-            CommandBuffer cmd = CommandBufferPool.Get("FullScreenPassRendererFeature");
+            CommandBuffer cmd = CommandBufferPool.Get(k_PassName);
 
             var cameraData = renderingData.cameraData;
             
-            if (renderingData.cameraData.isSceneViewCamera)
-            {
-                cmd.SetGlobalTexture(m_globalFullScreenBlurTexture, tmpRT2);
-            }
-            else
-            {
-		        #if UNITY_2022_1_OR_NEWER
-		        using (new ProfilingScope(cmd, passData.profilingSampler)) {
-			        ProcessEffect(ref context);
-		        }
-		        #else
-                ProcessEffect(ref context);
-		        #endif
-            }
-
+		    using (new ProfilingScope(cmd, m_ProfilingSampler)) {
+			    ProcessEffect(ref context);
+		    }
+            
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
+            
+            // End of function
 
             void ProcessEffect(ref ScriptableRenderContext context)
             {
@@ -124,7 +128,7 @@ namespace Unified.Universal.Blur
             
             void Blit1To2()
             {
-                cmd.Blit(tmpRT1, tmpRT2, passMaterial, 0);
+                cmd.Blit(tmpRT1, tmpRT2, passMaterial, passData.passIndex);
             }
 
             void SetBlurOffset(float offset)
@@ -143,9 +147,6 @@ namespace Unified.Universal.Blur
             internal Material effectMaterial;
             internal int passIndex;
             internal bool requiresColor;
-            internal bool disableInSceneView;
-
-            public ProfilingSampler profilingSampler;
 
             public float intensity;
             public float scale;

@@ -87,10 +87,8 @@ namespace Unified.Universal.Blur
             passData.intensity = intensity;
             passData.passIndex = passIndex;
             passData.requiresColor = _requiresColor;
-            passData.profilingSampler ??= new ProfilingSampler("FullScreenPassRendererFeature");
             passData.scale = scale;
             passData.iterations = iterations;
-            passData.disableInSceneView = disableInSceneView;
         }
     }
 
