@@ -7,9 +7,8 @@ namespace Unified.Universal.Blur
 {
     class UniversalBlurPass : ScriptableRenderPass
     {
-        private const string k_GlobalFullScreenBlurTexture = "_GlobalFullScreenBlurTexture";
-
         private static readonly int m_KawaseOffsetID = Shader.PropertyToID("_KawaseOffset");
+        private static readonly int m_globalFullScreenBlurTexture = Shader.PropertyToID("_GlobalFullScreenBlurTexture");
 
         private PassData m_PassData;
 
@@ -34,16 +33,14 @@ namespace Unified.Universal.Blur
 
         public void Dispose()
         {
-            #if UNITY_2022_1_OR_NEWER
-            if (m_PassData != null)
-            {
+            if (m_PassData == null)
+                return;
+            
+            if (m_PassData.tmpRT1 != null)
                 m_PassData.tmpRT1.Release();
+            
+            if (m_PassData.tmpRT2 != null)
                 m_PassData.tmpRT2.Release();
-            }
-            #else 
-            m_PassData.tmpRT1.Release();
-            m_PassData.tmpRT2.Release();
-            #endif
         }
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
@@ -65,11 +62,9 @@ namespace Unified.Universal.Blur
             if (renderingData.cameraData.isPreviewCamera)
                 return;
 
-            // if is scene camera and we want to disable in scene view
             if (renderingData.cameraData.isSceneViewCamera)
             {
-                // renderingData.cameraData.is
-                // return;
+                return;
             }
 
             CommandBuffer cmd = CommandBufferPool.Get("FullScreenPassRendererFeature");
@@ -78,7 +73,7 @@ namespace Unified.Universal.Blur
             
             if (renderingData.cameraData.isSceneViewCamera)
             {
-                cmd.SetGlobalTexture(k_GlobalFullScreenBlurTexture, tmpRT2);
+                cmd.SetGlobalTexture(m_globalFullScreenBlurTexture, tmpRT2);
             }
             else
             {
@@ -105,35 +100,41 @@ namespace Unified.Universal.Blur
                         cameraData.renderer.cameraColorTarget;
 					    #endif
 
-                    // --- Start
+                    // Setup
                     cmd.Blit(source, tmpRT1);
+                    
+                    SetBlurOffset(1.5f);
+                    Blit1To2();
 
-                    void DoBlit()
+                    if (passData.intensity > 0f)
                     {
-                        cmd.Blit(tmpRT1, tmpRT2, passMaterial, 0);
-                    }
-
-                    {
-                        cmd.SetGlobalFloat(m_KawaseOffsetID, 1.5f);
-                        DoBlit();
-
-                        if (passData.intensity > 0f)
+                        for (int i = 1; i <= passData.iterations; i++)
                         {
-                            for (var i = 1; i <= passData.iterations; i++)
-                            {
-                                var offset = (0.5f + i * scale) * passData.intensity;
+                            var offset = (0.5f + i * scale) * passData.intensity;
                             
-                                cmd.SetGlobalFloat(m_KawaseOffsetID, offset);
-                                DoBlit();
-
-                                (tmpRT1, tmpRT2) = (tmpRT2, tmpRT1);
-                            }
+                            SetBlurOffset(offset);
+                            Blit1To2();
+                            SwapRTs();
                         }
                     }
 
-                    cmd.SetGlobalTexture(k_GlobalFullScreenBlurTexture, tmpRT2);
-                    // --- End
+                    cmd.SetGlobalTexture(m_globalFullScreenBlurTexture, tmpRT2);
                 }
+            }
+            
+            void Blit1To2()
+            {
+                cmd.Blit(tmpRT1, tmpRT2, passMaterial, 0);
+            }
+
+            void SetBlurOffset(float offset)
+            {
+                cmd.SetGlobalFloat(m_KawaseOffsetID, offset);
+            }
+            
+            void SwapRTs()
+            {
+                (tmpRT1, tmpRT2) = (tmpRT2, tmpRT1);
             }
         }
 
