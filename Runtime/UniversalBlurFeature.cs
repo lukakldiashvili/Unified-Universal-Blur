@@ -22,7 +22,7 @@ namespace Unified.UniversalBlur.Runtime
 
         [Space]
         
-        [Range(0f, 1f)] [SerializeField] private float intensity = 1.0f;
+        [Range(0f, 5f)] [SerializeField] private float intensity = 1.0f;
         [Range(1f, 10f)] [SerializeField] private float downsample = 2.0f;
         [Range(0f, 5f)] [SerializeField] private float scale = .5f;
         [Range(1, 20)] [SerializeField] private int iterations = 6;

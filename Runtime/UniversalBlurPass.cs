@@ -107,7 +107,7 @@ namespace Unified.UniversalBlur.Runtime
                 {
                     for (int i = 1; i <= blurPassData.Iterations; i++)
                     {
-                        var offset = (0.5f + i * scale) * blurPassData.Intensity;
+                        var offset = (0.5f + i * scale) * (blurPassData.Intensity / blurPassData.Downsample);
                         
                         SetBlurOffset(offset);
                         Blit1To2();
