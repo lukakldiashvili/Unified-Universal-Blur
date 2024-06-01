@@ -20,12 +20,14 @@ namespace Unified.UniversalBlur.Runtime
         [field: Header("Blur Settings")]
         [field: SerializeField] private InjectionPoint injectionPoint = InjectionPoint.AfterRenderingPostProcessing;
 
-        [Space]
+        [field: Space]
+        [field: Range(0f, 1f)] [field: SerializeField] public float Intensity { get; set; } = 1.0f;
         
-        [Range(0f, 5f)] [SerializeField] private float intensity = 1.0f;
         [Range(1f, 10f)] [SerializeField] private float downsample = 2.0f;
-        [Range(0f, 5f)] [SerializeField] private float scale = .5f;
         [Range(1, 20)] [SerializeField] private int iterations = 6;
+        [Range(0f, 5f)] [SerializeField] private float scale = .5f;
+        [SerializeField] private ScaleBlurWith scaleBlurWith;
+        [SerializeField] private float scaleReferenceSize = 1080f;
         
         private readonly ScriptableRenderPassInput _requirements = ScriptableRenderPassInput.Color;
 
@@ -76,15 +78,22 @@ namespace Unified.UniversalBlur.Runtime
             _fullScreenPass?.Dispose();
         }
         
+        private float CalculateScale() => scaleBlurWith switch
+        {
+            ScaleBlurWith.ScreenHeight => scale * (Screen.height / scaleReferenceSize),
+            ScaleBlurWith.ScreenWidth => scale * (Screen.width / scaleReferenceSize),
+            _ => scale
+        };
+        
         private BlurPassData GetBlurPassData()
         {
             return new BlurPassData()
             {
                 EffectMaterial = PassMaterial,
                 Downsample = downsample,
-                Intensity = intensity,
+                Intensity = Intensity,
                 PassIndex = PassIndex,
-                Scale = scale,
+                Scale = CalculateScale(),
                 Iterations = iterations,
             };
         }
