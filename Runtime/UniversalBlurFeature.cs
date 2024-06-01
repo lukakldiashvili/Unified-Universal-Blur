@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 namespace Unified.UniversalBlur.Runtime
@@ -12,10 +13,7 @@ namespace Unified.UniversalBlur.Runtime
             AfterRenderingPostProcessing = RenderPassEvent.AfterRenderingPostProcessing
         }
         
-        [field: SerializeField] public Material PassMaterial { get; private set; }
-        
-        [field: Tooltip("Do not change this value unless you are using non-default shader.")]
-        [field: SerializeField] public int PassIndex { get; set; } = 0;
+        [field: SerializeField, HideInInspector] public int PassIndex { get; set; } = 0;
 
         [field: Header("Blur Settings")]
         [field: SerializeField] private InjectionPoint injectionPoint = InjectionPoint.AfterRenderingPostProcessing;
@@ -29,11 +27,19 @@ namespace Unified.UniversalBlur.Runtime
         [SerializeField] private ScaleBlurWith scaleBlurWith;
         [SerializeField] private float scaleReferenceSize = 1080f;
         
+        [SerializeField]
+        [HideInInspector]
+        [Reload("Shaders/KawaseBlur.shader")]
+        private Shader shader;
+        
         private readonly ScriptableRenderPassInput _requirements = ScriptableRenderPassInput.Color;
+        
+        public Material PassMaterial => _material;
 
         // Hidden by scope because of incorrect behaviour in the editor
         private bool disableInSceneView = true;
-
+        
+        private Material _material;
         private UniversalBlurPass _fullScreenPass;
         private bool _injectedBeforeTransparents;
 
@@ -59,9 +65,9 @@ namespace Unified.UniversalBlur.Runtime
         /// <inheritdoc/>
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
-            if (PassMaterial == null)
+            if (!TrySetShadersAndMaterials())
             {
-                Debug.LogWarningFormat("Missing Post Processing effect Material. {0} Fullscreen pass will not execute. Check for missing reference in the assigned renderer.", GetType().Name);
+                Debug.LogErrorFormat("{0}.AddRenderPasses(): Missing material. {1} render pass will not be added.", GetType().Name, name);
                 return;
             }
             
@@ -76,6 +82,19 @@ namespace Unified.UniversalBlur.Runtime
         protected override void Dispose(bool disposing)
         {
             _fullScreenPass?.Dispose();
+            CoreUtils.Destroy(_material);
+        }
+    
+        private bool TrySetShadersAndMaterials()
+        {
+            if (shader == null)
+            {
+                shader = Shader.Find("Unified/KawaseBlur");
+            }
+            
+            if (_material == null && shader != null)
+                _material = CoreUtils.CreateEngineMaterial(shader);
+            return _material != null;
         }
         
         private float CalculateScale() => scaleBlurWith switch
@@ -89,7 +108,7 @@ namespace Unified.UniversalBlur.Runtime
         {
             return new BlurPassData()
             {
-                EffectMaterial = PassMaterial,
+                EffectMaterial = _material,
                 Downsample = downsample,
                 Intensity = Intensity,
                 PassIndex = PassIndex,
