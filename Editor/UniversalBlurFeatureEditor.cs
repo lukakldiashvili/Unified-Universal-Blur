@@ -1,10 +1,11 @@
 //Credits to: https://github.com/Unity-Technologies/Graphics
 
 using System.Collections.Generic;
+using Unified.UniversalBlur.Runtime;
 using UnityEditor;
 using UnityEditor.Rendering;
 
-namespace Unified.Universal.Blur.Editor
+namespace Unified.UniversalBlur.Editor
 {
     /// <summary>
     /// Custom editor for FullScreenPassRendererFeature class responsible for drawing unavailable by default properties
@@ -47,7 +48,7 @@ namespace Unified.Universal.Blur.Editor
                 DrawAdditionalProperties();
             }
 
-            m_AffectedFeature.passIndex = m_PassIndexToUse;
+            m_AffectedFeature.PassIndex = m_PassIndexToUse;
 
             EditorUtility.SetDirty(target);
         }
@@ -55,12 +56,12 @@ namespace Unified.Universal.Blur.Editor
         private void DrawAdditionalProperties()
         {
             List<string> selectablePasses;
-            bool isMaterialValid = m_AffectedFeature.passMaterial != null;
+            bool isMaterialValid = m_AffectedFeature.PassMaterial != null;
             selectablePasses = isMaterialValid ? GetPassIndexStringEntries(m_AffectedFeature) : new List<string>() { "No material" };
 
             // If material is invalid 0'th index is selected automatically, so it stays on "No material" entry
             // It is invalid index, but FullScreenPassRendererFeature wont execute until material is valid
-            var choiceIndex = EditorGUILayout.Popup("Pass Index", m_AffectedFeature.passIndex, selectablePasses.ToArray());
+            var choiceIndex = EditorGUILayout.Popup("Pass Index", m_AffectedFeature.PassIndex, selectablePasses.ToArray());
 
             m_PassIndexToUse = choiceIndex;
 
@@ -69,10 +70,10 @@ namespace Unified.Universal.Blur.Editor
         private List<string> GetPassIndexStringEntries(UniversalBlurFeature component)
         {
             List<string> passIndexEntries = new List<string>();
-            for (int i = 0; i < component.passMaterial.passCount; ++i)
+            for (int i = 0; i < component.PassMaterial.passCount; ++i)
             {
                 // "Name of a pass (index)" - "PassAlpha (1)"
-                string entry = $"{component.passMaterial.GetPassName(i)} ({i})";
+                string entry = $"{component.PassMaterial.GetPassName(i)} ({i})";
                 passIndexEntries.Add(entry);
             }
 
