@@ -1,10 +1,11 @@
 //Credits to: https://github.com/Unity-Technologies/Graphics
 
 using System.Collections.Generic;
+using Unified.UniversalBlur.Runtime;
 using UnityEditor;
 using UnityEditor.Rendering;
 
-namespace Unified.Universal.Blur.Editor
+namespace Unified.UniversalBlur.Editor
 {
     /// <summary>
     /// Custom editor for FullScreenPassRendererFeature class responsible for drawing unavailable by default properties

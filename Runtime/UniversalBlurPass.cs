@@ -1,9 +1,8 @@
-using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-namespace Unified.Universal.Blur
+namespace Unified.UniversalBlur.Runtime
 {
     class UniversalBlurPass : ScriptableRenderPass
     {
@@ -28,8 +27,8 @@ namespace Unified.Universal.Blur
             m_PassData.rtDesc.height = Mathf.RoundToInt(m_PassData.rtDesc.height / downsample);
 
 		#if UNITY_2022_1_OR_NEWER
-		    RenderingUtils.ReAllocateIfNeeded(ref m_PassData.tmpRT1, m_PassData.rtDesc, name: "_PassRT1", wrapMode: TextureWrapMode.Clamp, filterMode: FilterMode.Bilinear);
-		    RenderingUtils.ReAllocateIfNeeded(ref m_PassData.tmpRT2, m_PassData.rtDesc, name: "_PassRT2", wrapMode: TextureWrapMode.Clamp, filterMode: FilterMode.Bilinear);
+		    RenderingUtils.ReAllocateIfNeeded(ref m_PassData.tmpRT1, m_PassData.rtDesc, name: "_PassRT1", wrapMode: TextureWrapMode.Clamp);
+		    RenderingUtils.ReAllocateIfNeeded(ref m_PassData.tmpRT2, m_PassData.rtDesc, name: "_PassRT2", wrapMode: TextureWrapMode.Clamp);
         #else
             m_PassData.tmpRT1 ??= new RenderTexture(m_PassData.rtDesc);
             m_PassData.tmpRT2 ??= new RenderTexture(m_PassData.rtDesc);

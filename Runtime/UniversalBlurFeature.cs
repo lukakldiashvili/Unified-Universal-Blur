@@ -1,8 +1,7 @@
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-namespace Unified.Universal.Blur
+namespace Unified.UniversalBlur.Runtime
 {
     public class UniversalBlurFeature : ScriptableRendererFeature
     {
