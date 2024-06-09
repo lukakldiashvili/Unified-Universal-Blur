@@ -1,10 +1,11 @@
+using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 namespace Unified.UniversalBlur.Runtime
 {
-    internal class UniversalBlurPass : ScriptableRenderPass
+    internal class UniversalBlurPass : ScriptableRenderPass, IDisposable
     {
         private const string k_PassName = "Unified Universal Blur";
         
@@ -15,34 +16,76 @@ namespace Unified.UniversalBlur.Runtime
         
         private BlurPassData _blurPassData;
         
+        private RenderTextureDescriptor _lastDescriptor;
+        private RenderTexture _blurRT1;
+        private RenderTexture _blurRT2;
+        
         public void Setup(BlurPassData blurPassData, in RenderingData renderingData)
         {
             _blurPassData = blurPassData;
             
-            _blurPassData.Descriptor = renderingData.cameraData.cameraTargetDescriptor;
-            _blurPassData.Descriptor.depthBufferBits = (int)DepthBits.None;
+            var descriptor = renderingData.cameraData.cameraTargetDescriptor;
+            descriptor.depthBufferBits = (int)DepthBits.None;
             
-            _blurPassData.Descriptor.width =
-                Mathf.RoundToInt(_blurPassData.Descriptor.width / _blurPassData.Downsample);
-            _blurPassData.Descriptor.height =
-                Mathf.RoundToInt(_blurPassData.Descriptor.height / _blurPassData.Downsample);
+            descriptor.width =
+                Mathf.RoundToInt(descriptor.width / _blurPassData.Downsample);
+            descriptor.height =
+                Mathf.RoundToInt(descriptor.height / _blurPassData.Downsample);
             
-            
-            if ((_blurPassData.RT1 == null || _blurPassData.RT2 == null)
-                || Helpers.HasDescriptorChanged(_blurPassData.RT1.descriptor, _blurPassData.Descriptor, false))
+            if (Helpers.HasDescriptorChanged(_lastDescriptor, descriptor, false))
             {
-                _blurPassData.RT1 = new RenderTexture(_blurPassData.Descriptor);
-                _blurPassData.RT2 = new RenderTexture(_blurPassData.Descriptor);
+                Dispose(false);
+                AllocateRenderTextures(descriptor);
             }
         }
         
+        private void AllocateRenderTextures(RenderTextureDescriptor descriptor)
+        {
+            _lastDescriptor = descriptor;
+            
+            if (_blurRT1 == null)
+            {
+                _blurRT1 = new RenderTexture(descriptor)
+                {
+                    name = "Universal Blur RT1"
+                };
+            }
+            
+            if (_blurRT2 == null)
+            {
+                _blurRT2 = new RenderTexture(descriptor)
+                {
+                    name = "Universal Blur RT2"
+                };
+            }
+        }
+        
+        ~UniversalBlurPass() => Dispose(false);
+        
         public void Dispose()
         {
-            if (_blurPassData.RT1 != null)
-                _blurPassData.RT1.Release();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        
+        private void Dispose(bool disposing)
+        {
+            if (_blurRT1 != null)
+            {
+                _blurRT1.Release();
+            }
             
-            if (_blurPassData.RT2 != null)
-                _blurPassData.RT2.Release();
+            if (_blurRT2 != null)
+            {
+                _blurRT2.Release();
+            }
+        }
+        
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        public void DrawDefaultTexture()
+        {
+            // For better preview experience in editor, we just use a gray texture
+            Shader.SetGlobalTexture(m_globalFullScreenBlurTexture, Texture2D.linearGrayTexture);
         }
         
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
@@ -54,9 +97,9 @@ namespace Unified.UniversalBlur.Runtime
             ref ScriptableRenderContext context)
         {
             var passMaterial = blurPassData.EffectMaterial;
-            var rt1 = blurPassData.RT1;
-            var rt2 = blurPassData.RT2;
             var scale = blurPassData.Scale;
+            var rt1 = _blurRT1;
+            var rt2 = _blurRT2;
             
             // should not happen as we check it in feature
             if (passMaterial == null)

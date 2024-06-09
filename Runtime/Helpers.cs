@@ -1,6 +1,4 @@
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
-using UnityEngine.Rendering;
 
 namespace Unified.UniversalBlur.Runtime
 {
@@ -15,8 +13,6 @@ namespace Unified.UniversalBlur.Runtime
                 return true;
             return
                 descriptorA.depthBufferBits != descriptorB.depthBufferBits ||
-                (descriptorA.depthBufferBits == (int)DepthBits.None && 
-                 descriptorA.graphicsFormat != (GraphicsFormat)descriptorB.colorFormat) ||
                 descriptorA.dimension != descriptorB.dimension ||
                 descriptorA.enableRandomWrite != descriptorB.enableRandomWrite ||
                 descriptorA.useMipMap != descriptorB.useMipMap ||

@@ -71,6 +71,15 @@ namespace Unified.UniversalBlur.Runtime
                 return;
             }
             
+            // Important to halt rendering here if camera is different, otherwise render textures will detect descriptor changes
+            if (renderingData.cameraData.isPreviewCamera ||
+                (renderingData.cameraData.isSceneViewCamera && disableInSceneView))
+            {
+                _fullScreenPass.DrawDefaultTexture();
+                
+                return;
+            }
+            
             var passData = GetBlurPassData();
             
             _fullScreenPass.Setup(passData, renderingData);
