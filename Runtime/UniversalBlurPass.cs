@@ -143,11 +143,11 @@ namespace Unified.UniversalBlur.Runtime
                 // Setup
                 cmd.Blit(source, rt1);
                 
-                SetBlurOffset(1.5f);
-                Blit1To2();
-                
                 if (blurPassData.Intensity > 0f)
                 {
+                    SetBlurOffset(1.5f);
+                    Blit1To2();
+                    
                     for (int i = 1; i <= blurPassData.Iterations; i++)
                     {
                         var offset = (0.5f + i * scale) * (blurPassData.Intensity / blurPassData.Downsample);
@@ -156,6 +156,10 @@ namespace Unified.UniversalBlur.Runtime
                         Blit1To2();
                         SwapRTs();
                     }
+                }
+                else
+                {
+                    Blit1To2();
                 }
                 
                 cmd.SetGlobalTexture(m_globalFullScreenBlurTexture, rt2);
