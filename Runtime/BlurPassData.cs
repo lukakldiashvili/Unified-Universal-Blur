@@ -11,5 +11,7 @@ namespace Unified.UniversalBlur.Runtime
         public float Intensity;
         public float Scale;
         public int Iterations;
+
+        public RenderTextureDescriptor Descriptor;
     }
 }

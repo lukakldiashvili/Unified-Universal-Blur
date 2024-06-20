@@ -15,70 +15,20 @@ namespace Unified.UniversalBlur.Runtime
         private ProfilingSampler m_ProfilingSampler = new(k_PassName);
         
         private BlurPassData _blurPassData;
+        private int renderTextureId1;
+        private int renderTextureId2;
         
-        private RenderTextureDescriptor _lastDescriptor;
-        private RenderTexture _blurRT1;
-        private RenderTexture _blurRT2;
         
         public void Setup(BlurPassData blurPassData, in RenderingData renderingData)
         {
             _blurPassData = blurPassData;
             
-            var descriptor = renderingData.cameraData.cameraTargetDescriptor;
-            descriptor.depthBufferBits = (int)DepthBits.None;
-            
-            descriptor.width =
-                Mathf.RoundToInt(descriptor.width / _blurPassData.Downsample);
-            descriptor.height =
-                Mathf.RoundToInt(descriptor.height / _blurPassData.Downsample);
-            
-            if (Helpers.HasDescriptorChanged(_lastDescriptor, descriptor, false))
-            {
-                Dispose(false);
-                AllocateRenderTextures(descriptor);
-            }
+            renderTextureId1 = Shader.PropertyToID("Unified Blur RT1");
+            renderTextureId2 = Shader.PropertyToID("Unified Blur RT2");
         }
-        
-        private void AllocateRenderTextures(RenderTextureDescriptor descriptor)
-        {
-            _lastDescriptor = descriptor;
-            
-            if (_blurRT1 == null)
-            {
-                _blurRT1 = new RenderTexture(descriptor)
-                {
-                    name = "Universal Blur RT1"
-                };
-            }
-            
-            if (_blurRT2 == null)
-            {
-                _blurRT2 = new RenderTexture(descriptor)
-                {
-                    name = "Universal Blur RT2"
-                };
-            }
-        }
-        
-        ~UniversalBlurPass() => Dispose(false);
         
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        
-        private void Dispose(bool disposing)
-        {
-            if (_blurRT1 != null)
-            {
-                _blurRT1.Release();
-            }
-            
-            if (_blurRT2 != null)
-            {
-                _blurRT2.Release();
-            }
         }
         
         [System.Diagnostics.Conditional("UNITY_EDITOR")]
@@ -98,8 +48,6 @@ namespace Unified.UniversalBlur.Runtime
         {
             var passMaterial = blurPassData.EffectMaterial;
             var scale = blurPassData.Scale;
-            var rt1 = _blurRT1;
-            var rt2 = _blurRT2;
             
             // should not happen as we check it in feature
             if (passMaterial == null)
@@ -118,6 +66,9 @@ namespace Unified.UniversalBlur.Runtime
             }
             
             CommandBuffer cmd = CommandBufferPool.Get(k_PassName);
+            
+            cmd.GetTemporaryRT(renderTextureId1, blurPassData.Descriptor, filter: FilterMode.Bilinear);
+            cmd.GetTemporaryRT(renderTextureId2, blurPassData.Descriptor, filter: FilterMode.Bilinear);
             
             var cameraData = renderingData.cameraData;
             
@@ -141,7 +92,7 @@ namespace Unified.UniversalBlur.Runtime
 #endif
                 
                 // Setup
-                cmd.Blit(source, rt1);
+                cmd.Blit(source, renderTextureId1);
                 
                 if (blurPassData.Intensity > 0f)
                 {
@@ -162,12 +113,15 @@ namespace Unified.UniversalBlur.Runtime
                     Blit1To2();
                 }
                 
-                cmd.SetGlobalTexture(m_globalFullScreenBlurTexture, rt2);
+                cmd.SetGlobalTexture(m_globalFullScreenBlurTexture, renderTextureId2);
+                
+                cmd.ReleaseTemporaryRT(renderTextureId1);
+                cmd.ReleaseTemporaryRT(renderTextureId2);
             }
             
             void Blit1To2()
             {
-                cmd.Blit(rt1, rt2, passMaterial, blurPassData.PassIndex);
+                cmd.Blit(renderTextureId1, renderTextureId2, passMaterial, blurPassData.PassIndex);
             }
             
             void SetBlurOffset(float offset)
@@ -177,7 +131,7 @@ namespace Unified.UniversalBlur.Runtime
             
             void SwapRTs()
             {
-                (rt1, rt2) = (rt2, rt1);
+                (renderTextureId1, renderTextureId2) = (renderTextureId2, renderTextureId1);
             }
         }
     }
