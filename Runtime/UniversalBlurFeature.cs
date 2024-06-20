@@ -80,7 +80,7 @@ namespace Unified.UniversalBlur.Runtime
                 return;
             }
             
-            var passData = GetBlurPassData();
+            var passData = GetBlurPassData(renderingData);
             
             _fullScreenPass.Setup(passData, renderingData);
 
@@ -113,17 +113,32 @@ namespace Unified.UniversalBlur.Runtime
             _ => scale
         };
         
-        private BlurPassData GetBlurPassData()
+        private BlurPassData GetBlurPassData(in RenderingData renderingData)
         {
-            return new BlurPassData()
+            return new BlurPassData
             {
-                EffectMaterial = _material,
-                Downsample = downsample,
-                Intensity = Intensity,
-                PassIndex = PassIndex,
                 Scale = CalculateScale(),
+                Descriptor = GetDescriptor(renderingData),
+                
+                EffectMaterial = _material,
+                Intensity = Intensity,
+                Downsample = downsample,
+                PassIndex = PassIndex,
                 Iterations = iterations,
             };
+        }
+
+        private RenderTextureDescriptor GetDescriptor(in RenderingData renderingData)
+        {
+            RenderTextureDescriptor descriptor = renderingData.cameraData.cameraTargetDescriptor;
+            descriptor.depthBufferBits = (int)DepthBits.None;
+            
+            descriptor.width =
+                Mathf.RoundToInt(descriptor.width / downsample);
+            descriptor.height =
+                Mathf.RoundToInt(descriptor.height / downsample);
+
+            return descriptor;
         }
     }
 }
