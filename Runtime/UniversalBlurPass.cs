@@ -59,13 +59,13 @@ namespace Unified.UniversalBlur.Runtime
             rtDescriptor.name = k_BlurTextureName2;
             TextureHandle rt2 = renderGraph.CreateTexture(rtDescriptor);
             
-            GraphAddBlitPass(renderGraph, cameraColorSource, rt1, _blurPassData.EffectMaterial, _blurPassData.PassIndex, _blurPassData.Offset);
+            GraphAddBlitPass(renderGraph, cameraColorSource, rt1, _blurPassData.EffectMaterial, _blurPassData.ShaderPass, _blurPassData.Offset);
             
             for (int i = 0; i < _blurPassData.Iterations; i++)
             {
                 var offset = (_blurPassData.Offset + i * _blurPassData.Scale) * (_blurPassData.Intensity / _blurPassData.Downsample);
                         
-                GraphAddBlitPass(renderGraph, rt1, rt2, _blurPassData.EffectMaterial, _blurPassData.PassIndex, offset);
+                GraphAddBlitPass(renderGraph, rt1, rt2, _blurPassData.EffectMaterial, _blurPassData.ShaderPass, offset);
                 
                 (rt1, rt2) = (rt2, rt1);
             }
@@ -83,13 +83,13 @@ namespace Unified.UniversalBlur.Runtime
             }
         }
 
-        private static void GraphAddBlitPass(RenderGraph renderGraph, TextureHandle source, TextureHandle destination, Material material, int passIndex, float blurOffset)
+        private static void GraphAddBlitPass(RenderGraph renderGraph, TextureHandle source, TextureHandle destination, Material material, int shaderPass, float blurOffset)
         {
             // TODO: Implement cached material property blocks
             var mpb = new MaterialPropertyBlock();
             mpb.SetFloat(s_kawaseOffsetID, blurOffset);
             
-            renderGraph.AddBlitPass(new BlitParams(source, destination, material, passIndex, mpb: mpb), passName: k_PassName);
+            renderGraph.AddBlitPass(new BlitParams(source, destination, material, shaderPass, mpb: mpb), passName: k_PassName);
         }
     }
 }

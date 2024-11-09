@@ -22,7 +22,7 @@ namespace Unified.UniversalBlur.Runtime
         
         [Space]
         
-        [SerializeField, ShowAsPass(nameof(_material))] public int passIndex;
+        [SerializeField, ShowAsPass(nameof(_material))] public int shaderPass;
         [Tooltip("Avoid changing this value unless you know what you are doing.")]
         [SerializeField] private RenderPassEvent injectionPoint = RenderPassEvent.AfterRenderingPostProcessing;
         
@@ -87,13 +87,6 @@ namespace Unified.UniversalBlur.Runtime
             return _material != null;
         }
         
-        private float CalculateScale() => scaleBlurWith switch
-        {
-            ScaleBlurWith.ScreenHeight => scale * (Screen.height / scaleReferenceSize) * _renderScale,
-            ScaleBlurWith.ScreenWidth => scale * (Screen.width / scaleReferenceSize) * _renderScale,
-            _ => scale
-        };
-        
         private BlurPassData GetBlurPassData(in RenderingData renderingData)
         {
             var (width, height) = GetTargetResolution(renderingData);
@@ -109,7 +102,7 @@ namespace Unified.UniversalBlur.Runtime
                 Intensity = intensity,
                 Downsample = downsample,
                 Offset = offset,
-                PassIndex = passIndex,
+                ShaderPass = shaderPass,
                 Iterations = iterations,
             };
         }
@@ -125,5 +118,12 @@ namespace Unified.UniversalBlur.Runtime
 
             return (width, height);
         }
+        
+        private float CalculateScale() => scaleBlurWith switch
+        {
+            ScaleBlurWith.ScreenHeight => scale * (Screen.height / scaleReferenceSize) * _renderScale,
+            ScaleBlurWith.ScreenWidth => scale * (Screen.width / scaleReferenceSize) * _renderScale,
+            _ => scale
+        };
     }
 }
