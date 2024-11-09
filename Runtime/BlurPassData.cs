@@ -13,6 +13,7 @@ namespace Unified.UniversalBlur.Runtime
         public float Offset;
         public int Iterations;
 
-        public RenderTextureDescriptor Descriptor;
+        public int Width;
+        public int Height;
     }
 }

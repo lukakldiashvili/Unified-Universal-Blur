@@ -6,63 +6,43 @@ namespace Unified.UniversalBlur.Runtime
 {
     public class UniversalBlurFeature : ScriptableRendererFeature
     {
-        private enum InjectionPoint
-        {
-            BeforeRenderingTransparents = RenderPassEvent.BeforeRenderingTransparents,
-            BeforeRenderingPostProcessing = RenderPassEvent.BeforeRenderingPostProcessing,
-            AfterRenderingPostProcessing = RenderPassEvent.AfterRenderingPostProcessing
-        }
+        [Header("Blur Settings")]
+        [Range(1, 8)] [SerializeField] private int iterations = 5;
         
-        [field: SerializeField, HideInInspector] public int PassIndex { get; set; } = 0;
-
-        [field: Header("Blur Settings")]
-        [field: SerializeField] private InjectionPoint injectionPoint = InjectionPoint.AfterRenderingPostProcessing;
-
-        [Space]
         [Range(0f, 1f)] [SerializeField] public float intensity = 1.0f;
         [Range(1f, 10f)] [SerializeField] private float downsample = 2.0f;
-        [Range(1, 8)] [SerializeField] private int iterations = 5;
         [Range(0f, 10f)] [SerializeField] private float scale = 5f;
-        [Range(0f, 10f)] [SerializeField] private float offset = 2;
-        [SerializeField] private ScaleBlurWith scaleBlurWith;
+        [Range(0f, 10f)] [SerializeField] private float offset = 2f;
+        
+        [Space]
+        
+        [Header("Advanced Settings")]
+        [SerializeField] private ScaleBlurWith scaleBlurWith = ScaleBlurWith.ScreenHeight;
         [SerializeField] private float scaleReferenceSize = 1080f;
+        
+        [Space]
+        
+        [SerializeField, ShowAsPass(nameof(_material))] public int passIndex;
+        [Tooltip("Avoid changing this value unless you know what you are doing.")]
+        [SerializeField] private RenderPassEvent injectionPoint = RenderPassEvent.AfterRenderingPostProcessing;
         
         [SerializeField]
         [HideInInspector]
         [Reload("Shaders/Blur.shader")]
         private Shader shader;
         
-        private readonly ScriptableRenderPassInput _requirements = ScriptableRenderPassInput.Color;
-        
-        public Material PassMaterial => _material;
-
-        // Hidden by scope because of incorrect behaviour in the editor
-        private bool disableInSceneView = true;
-        
         private Material _material;
-        private UniversalBlurPass _fullScreenPass;
-        private bool _injectedBeforeTransparents;
+        private UniversalBlurPass _blurPass;
         private float _renderScale; 
 
         /// <inheritdoc/>
         public override void Create()
         {
-            _fullScreenPass = new UniversalBlurPass();
-            _fullScreenPass.renderPassEvent = (RenderPassEvent)injectionPoint;
-
-            ScriptableRenderPassInput modifiedRequirements = _requirements;
-
-            var requiresColor = (_requirements & ScriptableRenderPassInput.Color) != 0;
-            _injectedBeforeTransparents = injectionPoint <= InjectionPoint.BeforeRenderingTransparents;
-
-            if (requiresColor && !_injectedBeforeTransparents)
-            {
-                modifiedRequirements ^= ScriptableRenderPassInput.Color;
-            }
-
-            _fullScreenPass.ConfigureInput(modifiedRequirements);
+            _blurPass = new UniversalBlurPass();
+            _blurPass.renderPassEvent = injectionPoint;
         }
 
+        /// <inheritdoc/>
         public override void OnCameraPreCull(ScriptableRenderer renderer, in CameraData cameraData)
         {
             base.OnCameraPreCull(renderer, in cameraData);
@@ -80,18 +60,18 @@ namespace Unified.UniversalBlur.Runtime
             
             var passData = GetBlurPassData(renderingData);
             
-            _fullScreenPass.Setup(passData);
+            _blurPass.Setup(passData);
 
             if (renderingData.cameraData.cameraType == CameraType.Game)
             {
-                renderer.EnqueuePass(_fullScreenPass);
+                renderer.EnqueuePass(_blurPass);
             }
         }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            _fullScreenPass?.Dispose();
+            _blurPass?.Dispose();
             CoreUtils.Destroy(_material);
         }
     
@@ -116,31 +96,34 @@ namespace Unified.UniversalBlur.Runtime
         
         private BlurPassData GetBlurPassData(in RenderingData renderingData)
         {
+            var (width, height) = GetTargetResolution(renderingData);
+            
             return new BlurPassData
             {
                 Scale = CalculateScale(),
-                Descriptor = GetDescriptor(renderingData),
+                
+                Width = width,
+                Height = height,
                 
                 EffectMaterial = _material,
                 Intensity = intensity,
                 Downsample = downsample,
                 Offset = offset,
-                PassIndex = PassIndex,
+                PassIndex = passIndex,
                 Iterations = iterations,
             };
         }
 
-        private RenderTextureDescriptor GetDescriptor(in RenderingData renderingData)
+        private (int width, int height) GetTargetResolution(in RenderingData renderingData)
         {
             RenderTextureDescriptor descriptor = renderingData.cameraData.cameraTargetDescriptor;
-            descriptor.depthBufferBits = (int)DepthBits.None;
             
-            descriptor.width =
+            var width =
                 Mathf.RoundToInt(descriptor.width / downsample);
-            descriptor.height =
+            var height =
                 Mathf.RoundToInt(descriptor.height / downsample);
 
-            return descriptor;
+            return (width, height);
         }
     }
 }

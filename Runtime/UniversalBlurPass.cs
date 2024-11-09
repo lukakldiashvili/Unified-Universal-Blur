@@ -17,10 +17,10 @@ namespace Unified.UniversalBlur.Runtime
         private const string k_BlurTextureName1 = k_PassName + " - Blur RT1";
         private const string k_BlurTextureName2 = k_PassName + " - Blur RT2";
 
-        private static readonly int m_KawaseOffsetID = Shader.PropertyToID("_KawaseOffset");
-        private static readonly int m_globalFullScreenBlurTexture = Shader.PropertyToID("_GlobalFullScreenBlurTexture");
+        private static readonly int s_kawaseOffsetID = Shader.PropertyToID("_KawaseOffset");
+        private static readonly int s_globalFullScreenBlurTexture = Shader.PropertyToID("_GlobalFullScreenBlurTexture");
 
-        private ProfilingSampler m_ProfilingSampler = new(k_PassName);
+        private readonly ProfilingSampler _profilingSampler = new(k_PassName);
 
         private BlurPassData _blurPassData;
 
@@ -49,8 +49,8 @@ namespace Unified.UniversalBlur.Runtime
             var cameraColorSource = resourceData.activeColorTexture;
             
             var rtDescriptor = renderGraph.GetTextureDesc(cameraColorSource);
-            rtDescriptor.width = _blurPassData.Descriptor.width;
-            rtDescriptor.height = _blurPassData.Descriptor.height;
+            rtDescriptor.width = _blurPassData.Width;
+            rtDescriptor.height = _blurPassData.Height;
             rtDescriptor.wrapMode = TextureWrapMode.Clamp;
             rtDescriptor.clearBuffer = false;
 
@@ -70,14 +70,14 @@ namespace Unified.UniversalBlur.Runtime
                 (rt1, rt2) = (rt2, rt1);
             }
             
-            using (var builder = renderGraph.AddRasterRenderPass<PassData>(k_PassName, out var passData, m_ProfilingSampler))
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>(k_PassName, out var passData, _profilingSampler))
             {
                 builder.AllowPassCulling(false);
                 
                 builder.UseTexture(rt1);
                 builder.UseTexture(rt2);
                 
-                builder.SetGlobalTextureAfterPass(rt2, m_globalFullScreenBlurTexture);
+                builder.SetGlobalTextureAfterPass(rt2, s_globalFullScreenBlurTexture);
                 
                 builder.SetRenderFunc((PassData data, RasterGraphContext context) => { /* Do nothing */ });
             }
@@ -87,7 +87,7 @@ namespace Unified.UniversalBlur.Runtime
         {
             // TODO: Implement cached material property blocks
             var mpb = new MaterialPropertyBlock();
-            mpb.SetFloat(m_KawaseOffsetID, blurOffset);
+            mpb.SetFloat(s_kawaseOffsetID, blurOffset);
             
             renderGraph.AddBlitPass(new BlitParams(source, destination, material, passIndex, mpb: mpb), passName: k_PassName);
         }
