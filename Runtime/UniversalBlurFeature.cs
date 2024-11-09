@@ -18,18 +18,18 @@ namespace Unified.UniversalBlur.Runtime
         [field: Header("Blur Settings")]
         [field: SerializeField] private InjectionPoint injectionPoint = InjectionPoint.AfterRenderingPostProcessing;
 
-        [field: Space]
-        [field: Range(0f, 1f)] [field: SerializeField] public float Intensity { get; set; } = 1.0f;
-        
+        [Space]
+        [Range(0f, 1f)] [SerializeField] public float intensity = 1.0f;
         [Range(1f, 10f)] [SerializeField] private float downsample = 2.0f;
-        [Range(1, 20)] [SerializeField] private int iterations = 6;
-        [Range(0f, 5f)] [SerializeField] private float scale = .5f;
+        [Range(1, 8)] [SerializeField] private int iterations = 5;
+        [Range(0f, 10f)] [SerializeField] private float scale = 5f;
+        [Range(0f, 10f)] [SerializeField] private float offset = 2;
         [SerializeField] private ScaleBlurWith scaleBlurWith;
         [SerializeField] private float scaleReferenceSize = 1080f;
         
         [SerializeField]
         [HideInInspector]
-        [Reload("Shaders/KawaseBlur.shader")]
+        [Reload("Shaders/Blur.shader")]
         private Shader shader;
         
         private readonly ScriptableRenderPassInput _requirements = ScriptableRenderPassInput.Color;
@@ -78,20 +78,14 @@ namespace Unified.UniversalBlur.Runtime
                 return;
             }
             
-            // Important to halt rendering here if camera is different, otherwise render textures will detect descriptor changes
-            if (renderingData.cameraData.isPreviewCamera ||
-                (renderingData.cameraData.isSceneViewCamera && disableInSceneView))
-            {
-                _fullScreenPass.DrawDefaultTexture();
-                
-                return;
-            }
-            
             var passData = GetBlurPassData(renderingData);
             
-            _fullScreenPass.Setup(passData, renderingData);
+            _fullScreenPass.Setup(passData);
 
-            renderer.EnqueuePass(_fullScreenPass);
+            if (renderingData.cameraData.cameraType == CameraType.Game)
+            {
+                renderer.EnqueuePass(_fullScreenPass);
+            }
         }
 
         /// <inheritdoc/>
@@ -105,7 +99,7 @@ namespace Unified.UniversalBlur.Runtime
         {
             if (shader == null)
             {
-                shader = Shader.Find("Unified/KawaseBlur");
+                shader = Shader.Find("Unify/Internal/Blur");
             }
             
             if (_material == null && shader != null)
@@ -128,8 +122,9 @@ namespace Unified.UniversalBlur.Runtime
                 Descriptor = GetDescriptor(renderingData),
                 
                 EffectMaterial = _material,
-                Intensity = Intensity,
+                Intensity = intensity,
                 Downsample = downsample,
+                Offset = offset,
                 PassIndex = PassIndex,
                 Iterations = iterations,
             };

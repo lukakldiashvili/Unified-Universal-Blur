@@ -10,6 +10,7 @@ namespace Unified.UniversalBlur.Runtime
         public float Downsample;
         public float Intensity;
         public float Scale;
+        public float Offset;
         public int Iterations;
 
         public RenderTextureDescriptor Descriptor;
