@@ -28,7 +28,7 @@ namespace Unified.UniversalBlur.Runtime
             public int Iterations;
         }
         
-        private const string k_PassName = "KawaseBlurMain";
+        private const string k_PassName = "Universal Blur";
         private const string k_BlurTextureSourceName = k_PassName + " - Blur Source";
         private const string k_BlurTextureDestinationName = k_PassName + " - Blur Destination";
 
@@ -37,7 +37,7 @@ namespace Unified.UniversalBlur.Runtime
         private static readonly int s_BlurOffsetID = Shader.PropertyToID("_BlurOffset");
         private static readonly int s_BlitTextureID = Shader.PropertyToID("_BlitTexture");
         private static readonly int s_BlitScaleBias = Shader.PropertyToID("_BlitScaleBias");
-        private static readonly int s_GlobalFullScreenBlurTextureID = Shader.PropertyToID("_GlobalFullScreenBlurTexture");
+        private static readonly int s_GlobalFullScreenBlurTextureID = Shader.PropertyToID("_GlobalUniversalBlurTexture");
 
         private readonly ProfilingSampler _profilingSampler;
         private readonly MaterialPropertyBlock _propertyBlock;
