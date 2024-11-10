@@ -4,7 +4,7 @@ namespace Unified.UniversalBlur.Runtime
 {
     internal struct BlurPassData
     {
-        internal Material EffectMaterial;
+        internal Material Material;
         internal int ShaderPass;
         
         public float Downsample;

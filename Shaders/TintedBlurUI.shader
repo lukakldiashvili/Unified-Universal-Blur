@@ -1,4 +1,4 @@
-Shader "Unify/UniversalBlurForUI"
+Shader "Unify/UI/Tinted Blur"
 {
     Properties
     {

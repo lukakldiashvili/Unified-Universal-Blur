@@ -7,11 +7,11 @@ namespace Unified.UniversalBlur.Runtime
     public class UniversalBlurFeature : ScriptableRendererFeature
     {
         [Header("Blur Settings")]
-        [Range(1, 8)] [SerializeField] private int iterations = 5;
+        [Range(1, 8)] [SerializeField] private int iterations = 4;
         
         [Range(0f, 1f)] [SerializeField] public float intensity = 1.0f;
         [Range(1f, 10f)] [SerializeField] private float downsample = 2.0f;
-        [Range(0f, 10f)] [SerializeField] private float scale = 5f;
+        [Range(0f, 10f)] [SerializeField] private float scale = 1f;
         [Range(0f, 10f)] [SerializeField] private float offset = 2f;
         
         [Space]
@@ -77,13 +77,12 @@ namespace Unified.UniversalBlur.Runtime
     
         private bool TrySetShadersAndMaterials()
         {
-            if (shader == null)
-            {
+            if (shader == null) 
                 shader = Shader.Find("Unify/Internal/Blur");
-            }
             
             if (_material == null && shader != null)
                 _material = CoreUtils.CreateEngineMaterial(shader);
+            
             return _material != null;
         }
         
@@ -98,7 +97,7 @@ namespace Unified.UniversalBlur.Runtime
                 Width = width,
                 Height = height,
                 
-                EffectMaterial = _material,
+                Material = _material,
                 Intensity = intensity,
                 Downsample = downsample,
                 Offset = offset,

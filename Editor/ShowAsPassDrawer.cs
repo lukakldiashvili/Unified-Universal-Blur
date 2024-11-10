@@ -31,7 +31,7 @@ namespace Unified.UniversalBlur.Editor
                 var selectablePasses = GetPassIndexStringEntries(material);
 
                 EditorGUI.BeginProperty(position, label, property);
-                var choiceIndex = EditorGUI.Popup(position, "Pass Index", property.intValue, selectablePasses.ToArray());
+                var choiceIndex = EditorGUI.Popup(position, label, property.intValue, selectablePasses.ToArray());
 
                 property.intValue = choiceIndex;
             }
@@ -43,13 +43,13 @@ namespace Unified.UniversalBlur.Editor
             EditorGUI.EndProperty();
         }
         
-        private List<string> GetPassIndexStringEntries(Material material)
+        private List<GUIContent> GetPassIndexStringEntries(Material material)
         {
-            List<string> passIndexEntries = new List<string>();
+            var passIndexEntries = new List<GUIContent>();
             for (int i = 0; i < material.passCount; ++i)
             {
                 string entry = $"{material.GetPassName(i)} ({i})";
-                passIndexEntries.Add(entry);
+                passIndexEntries.Add(new GUIContent(entry));
             }
 
             return passIndexEntries;

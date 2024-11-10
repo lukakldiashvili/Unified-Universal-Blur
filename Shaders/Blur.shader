@@ -9,7 +9,7 @@ Shader "Unify/Internal/Blur"
         ZWrite Off Cull Off
         Pass
         {
-            Name "KawaseBlurMain"
+            Name "Fast - Kawase"
 
             HLSLPROGRAM
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
@@ -18,9 +18,9 @@ Shader "Unify/Internal/Blur"
             #pragma vertex Vert
             #pragma fragment Frag
             
-            #define SAMPLE(textureName, coord2) SAMPLE_TEXTURE2D_LOD(textureName, sampler_LinearRepeat, coord2, _BlitMipLevel)
+            #define SAMPLE(textureName, coord2) SAMPLE_TEXTURE2D_LOD(textureName, sampler_LinearClamp, coord2, _BlitMipLevel)
 
-            float _KawaseOffset;
+            float _BlurOffset;
 
             half4 KawaseBlur(Texture2D blurTexture, float2 uv, float offset, float2 texelSize)
             {
@@ -51,7 +51,7 @@ Shader "Unify/Internal/Blur"
                     uv.y = 1.0 - uv.y;
                 #endif
 
-                half4 color = KawaseBlur(_BlitTexture, uv, _KawaseOffset, _BlitTexture_TexelSize);
+                half4 color = KawaseBlur(_BlitTexture, uv, _BlurOffset, _BlitTexture_TexelSize);
                 return color;
             }
             ENDHLSL
