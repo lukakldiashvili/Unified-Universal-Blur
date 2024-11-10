@@ -99,7 +99,7 @@ Shader "Unify/UI/Tinted Blur"
             {
                 half4 mainTexColor = tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd;
                 
-                half4 color = (tex2D(_GlobalUniversalBlurTexture, IN.screenPos) + _TextureSampleAdd) * IN.color;
+                half4 color = (tex2D(_GlobalUniversalBlurTexture, IN.screenPos / IN.screenPos.w) + _TextureSampleAdd) * IN.color;
 
                 #ifdef UNITY_UI_CLIP_RECT
                 mainTexColor.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);

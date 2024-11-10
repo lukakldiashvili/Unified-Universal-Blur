@@ -23,7 +23,8 @@ namespace Unified.UniversalBlur.Runtime
         [Space]
         
         [SerializeField, ShowAsPass(nameof(_material))] public int shaderPass;
-        [Tooltip("Avoid changing this value unless you know what you are doing.")]
+        [Tooltip("For Overlay Canvas: AfterRenderingPostProcessing" +
+                 "\n\nOther: BeforeRenderingTransparents (will hide transparents)")]
         [SerializeField] private RenderPassEvent injectionPoint = RenderPassEvent.AfterRenderingPostProcessing;
         
         [SerializeField]
@@ -61,11 +62,8 @@ namespace Unified.UniversalBlur.Runtime
             var passData = GetBlurPassData(renderingData);
             
             _blurPass.Setup(passData);
-
-            if (renderingData.cameraData.cameraType == CameraType.Game)
-            {
-                renderer.EnqueuePass(_blurPass);
-            }
+            
+            renderer.EnqueuePass(_blurPass);
         }
 
         /// <inheritdoc/>
