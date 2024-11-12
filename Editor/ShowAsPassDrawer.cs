@@ -15,31 +15,39 @@ namespace Unified.UniversalBlur.Editor
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            EditorGUI.BeginProperty(position, label, property);
+            
             ShowAsPass passAttribute = (ShowAsPass) attribute;
 
             var target = property.serializedObject.targetObject;
+            var targetMaterialField = passAttribute.TargetMaterialField;
             
             _targetType ??= target.GetType();
-            _targetField ??= _targetType.GetField(passAttribute.TargetMaterial, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            _targetField ??= _targetType.GetField(targetMaterialField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
             if (_targetField != null)
             {
                 var fieldValue = _targetField.GetValue(target);
             
                 Material material = fieldValue as Material;
-            
-                var selectablePasses = GetPassIndexStringEntries(material);
 
-                EditorGUI.BeginProperty(position, label, property);
-                var choiceIndex = EditorGUI.Popup(position, label, property.intValue, selectablePasses.ToArray());
-
-                property.intValue = choiceIndex;
+                if (material != null)
+                {
+                    var selectablePasses = GetPassIndexStringEntries(material);
+                    var choiceIndex = EditorGUI.Popup(position, label, property.intValue, selectablePasses.ToArray());
+                    
+                    property.intValue = choiceIndex;
+                }
+                else
+                {
+                    EditorGUI.HelpBox(position, $"Incorrect target field or Material not set.", MessageType.Error);
+                }
             }
             else
             {
-                EditorGUI.HelpBox(position, $"Field {passAttribute.TargetMaterial} not found in {_targetType.Name}", MessageType.Error);
+                EditorGUI.HelpBox(position, $"Field {targetMaterialField} not found on {_targetType.Name}.", MessageType.Error);
             }
-
+            
             EditorGUI.EndProperty();
         }
         

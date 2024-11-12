@@ -6,11 +6,11 @@ namespace Unified.UniversalBlur.Runtime
     [AttributeUsage(AttributeTargets.Field)]
     public class ShowAsPass : PropertyAttribute
     {
-        public string TargetMaterial { get; private set; }
+        public string TargetMaterialField { get; private set; }
         
-        public ShowAsPass(string targetMaterial)
+        public ShowAsPass(string targetMaterialField)
         {
-            TargetMaterial = targetMaterial;
+            TargetMaterialField = targetMaterialField;
         }
     }
 }
