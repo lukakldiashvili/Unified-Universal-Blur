@@ -1,44 +1,66 @@
-<p align="center">
-  <img width="700" alt="blur_demo_01" src="https://github.com/lukakldiashvili/Unified-Universal-Blur/assets/42884387/cebc5905-269c-46fe-9ee6-81d13658b494">
-</p>
+<img align="center" alt="Unified Blur Banner" src="https://github.com/user-attachments/assets/262f9232-0f05-49fb-ac7d-622e24b8f9c5"/>
 
-### <i>For a demo project, please visit: <a href="https://github.com/lukakldiashvili/Unified-Universal-Blur-Sandbox">Sandbox Unity Project</a></i>
+<h1 align="center">
+<strong>Unified Blur</strong>
+</h1>
 
+*Enhance your project quality with a clean and performant screen blur effect, built for Unity 6 and beyond using Render Graph.*
 
-## Unified Universal Blur - URP Blur effect for Unity
+[![Latest release](https://img.shields.io/github/v/release/lukakldiashvili/Unified-Universal-Blur?label=Latest%20release&style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/releases)
+[![Stars](https://img.shields.io/github/stars/lukakldiashvili/Unified-Universal-Blur?style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/stargazers)
+[![Fork](https://img.shields.io/github/forks/lukakldiashvili/Unified-Universal-Blur?style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/network/members)
+[![Watchers](https://img.shields.io/github/watchers/lukakldiashvili/Unified-Universal-Blur?style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/watchers)
 
-Unified Universal Blur allows you to display blurred version of the screen, usually for translucent UI effects.
+<img align="left" alt="Unsupported" src="https://img.shields.io/badge/Unsupported-<=_2022.3-red?style=flat-square" style="margin-right: 4px;"/> 
+<img align="left" alt="Supported" src="https://img.shields.io/badge/Supported->_6000.1-green?style=flat-square" style="margin-right: 4px;"/>
+<img align="right" alt="URP" src="https://img.shields.io/badge/URP-Yes-green?style=flat-square" style="margin-left: 4px;"/>
+<img align="right" alt="HDRP" src="https://img.shields.io/badge/HDRP-No-red?style=flat-square" style="margin-left: 4px;"/>
+<img align="right" alt="BIRP" src="https://img.shields.io/badge/BIRP-No-red?style=flat-square" style="margin-left: 4px;"/>
 
-Currently intended use cases include (other scenarios may not work):
-- UI image component with blur material, displaying blurred 3D world (Canvas set to 'Screen Space - Overlay').
-
-Features:
-- Blurs both opaque and transparent objects (make sure correct setting is selected)
-- Blurs Post-Processing and any other image effect which is rendered before blur (based on render feature order)
-
-Limitations:
-- NOT able to blur other UI components
-
-
-<i>Tested and working for unity versions: `2020.3, 2021.3 2022.3`</i>
-
-
-### Installation
-
-#### upm
-Simply add this repository via package manager's `Add package from git URL...` (for a specific version visit [releases](https://github.com/lukakldiashvili/Unified-Universal-Blur/releases)).
-<br>
-(more information about upm: https://docs.unity3d.com/Manual/upm-git.html)
-
-#### Manual
-It is also possible to download zip and put its content anywhere in the project.
 <br>
 
-### Setup
+---
+## Introduction
 
-- Add "Universal Blur Feature" renderer feature in every renderer data that is being used by project.
-<br>(more information about using universal renderer: https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@15.0/manual/urp-universal-renderer.html).
-- Assign "KawaseBlurMat" material to passMaterial if not present already.
-- (Optional) Play with settings.
-- Assign BlurForUI material to any UI image component.
-- Done.
+**Unified Blur** is a powerful and flexible screen blur effect for Unity, built using the new Render Graph API. It is designed to be easy to use, efficient, and highly customizable. Unified Blur is perfect for creating clean translucent effect for you application.
+
+> **Note:** Since Unified Blur is built on top of new Render Graph API, it is not compatible with older versions of Unity.<br>
+> To access last version of Unified Blur that supports older versions of Unity, please visit [Latest Legacy Branch](https://github.com/lukakldiashvili/Unified-Universal-Blur/tree/legacy/0.4.1).
+
+---
+
+<img align="center" alt="Showcase" src="https://github.com/user-attachments/assets/f97043d5-ed16-45da-91e9-e1d4bdf20518"/>
+
+## Behind the Scenes
+
+**Unified Blur** works by inserting a custom render pass into the render graph, at a specific point that is configurable, which copies back buffer and applies a blur effect to it. After the render pass is complete, blurred image is available via global texture for future objects rendered to use.
+
+## Use Cases
+
+**Unified Blur** is best used with UI components that are part of the `Screen Space - Overlay` canvas. But, it does support other canvas types as well, although with some limitations (check out [limitations](#limitations) section).
+
+- Option 1: **UI Image Component with Blur Material**<br>
+  Display a blurred version of the screen on a UI Image component. This is useful for creating translucent UI effects.
+<br><br>
+- Option 2: **Custom Shader with Unified Blur**<br>
+  Use global texture generated by Unified Blur Render Feature in your custom shader to create unique effects.
+
+## Installation
+
+- **Unity Package Manager** - Copy git url and add it via package manager's `Add package from git URL...` (for a specific version visit [releases](https://github.com/lukakldiashvili/Unified-Universal-Blur/releases)).
+- **Open UPM** - For more information, visit [OpenUPM Page](https://openupm.com/packages/com.unify.unified-universal-blur/).
+- **Manual** - Download zip, extract and put its content anywhere in the project (preferably in Plugins folder).
+
+## Setup
+
+1. **Add Unified Blur Render Feature**<br>
+   Add `Unified Blur Render Feature` to the renderer data that is being used by the project. This can be done by selecting the renderer data asset and adding the feature in the inspector.
+2. **Assign Blur Material To UI Image Component**<br>
+    Assign `UniversalBlurUI` material to any UI Image component that you want to display the blurred screen on.
+3. **Play with Settings**<br>
+   Adjust settings in the `Unified Blur Render Feature` settings to get the desired blur effect.
+
+## Limitations
+
+- Limited support for world space or screen space camera canvases.<br>
+*To enable this kind of support, change injection point in Render Feature's settings panel to `BeforeRenderingTransparents`. Note that, transparent objects and other canvases will not be visible in this scenario.*
