@@ -1,9 +1,9 @@
 {
     "name": "com.unify.unified-universal-blur",
-    "displayName": "Unified Universal Blur",
-    "description": "Unified Universal Blur is a package that allows you to use the blur effect in URP.",
-    "version": "0.4.0",
-    "unity": "2020.3",
+    "displayName": "Unified Blur",
+    "description": "Unified Blur enables you to use translucent blur effect on your canvas.",
+    "version": "0.6.0",
+    "unity": "6000.1",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -15,7 +15,7 @@
         "url": "https://github.com/lukakldiashvili"
     },
     "dependencies": {
-        "com.unity.render-pipelines.universal": "7.0.0"
+        "com.unity.render-pipelines.universal": "17.0.3"
     },
     "keywords": [
         "unify",
