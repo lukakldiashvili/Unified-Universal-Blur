@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: UniversalBlurForUI
+  m_Name: UniversalBlurUI
   m_Shader: {fileID: 4800000, guid: a7b13085d76ad4a579b8cd4b744827a9, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []

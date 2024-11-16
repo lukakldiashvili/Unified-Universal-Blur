@@ -1,4 +1,4 @@
-Shader "Unify/UniversalBlurForUI"
+Shader "Unify/UI/Tinted Blur"
 {
     Properties
     {
@@ -75,7 +75,7 @@ Shader "Unify/UniversalBlurForUI"
             };
 
             sampler2D _MainTex;
-            sampler2D _GlobalFullScreenBlurTexture;
+            sampler2D _GlobalUniversalBlurTexture;
             fixed4 _TextureSampleAdd;
             float4 _ClipRect;
             float4 _MainTex_ST;
@@ -99,8 +99,7 @@ Shader "Unify/UniversalBlurForUI"
             {
                 half4 mainTexColor = tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd;
                 
-                // to support Unity UI Canvas Render Mode - Screen Space Camera or World Space, divide final blurred image UV by camera plane distance (vertex.w)
-                half4 color = (tex2D(_GlobalFullScreenBlurTexture, IN.screenPos / IN.vertex.w) + _TextureSampleAdd) * IN.color;
+                half4 color = (tex2D(_GlobalUniversalBlurTexture, IN.screenPos / IN.screenPos.w) + _TextureSampleAdd) * IN.color;
 
                 #ifdef UNITY_UI_CLIP_RECT
                 mainTexColor.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);

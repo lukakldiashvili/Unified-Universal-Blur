@@ -1,138 +1,164 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Rendering.Universal;
+
+using BlitParams = UnityEngine.Rendering.RenderGraphModule.Util.RenderGraphUtils.BlitMaterialParameters;
 
 namespace Unified.UniversalBlur.Runtime
 {
     internal class UniversalBlurPass : ScriptableRenderPass, IDisposable
     {
-        private const string k_PassName = "Unified Universal Blur";
+        private class PassData
+        {
+            public TextureHandle ColorSource;
+            public TextureHandle Source;
+            public TextureHandle Destination;
+
+            public MaterialPropertyBlock MaterialPropertyBlock;
+            public Material Material;
+            public int ShaderPass;
+            
+            public float Downsample;
+            public float Intensity;
+            public float Scale;
+            public float Offset;
+            public int Iterations;
+        }
         
-        private static readonly int m_KawaseOffsetID = Shader.PropertyToID("_KawaseOffset");
-        private static readonly int m_globalFullScreenBlurTexture = Shader.PropertyToID("_GlobalFullScreenBlurTexture");
+        private const string k_PassName = "Universal Blur";
+        private const string k_BlurTextureSourceName = k_PassName + " - Blur Source";
+        private const string k_BlurTextureDestinationName = k_PassName + " - Blur Destination";
+
+        private static readonly Vector4 s_DefaultBlitBias = new(1f, 1f, 0f, 0f);
         
-        private ProfilingSampler m_ProfilingSampler = new(k_PassName);
-        
+        private static readonly int s_BlurOffsetID = Shader.PropertyToID("_BlurOffset");
+        private static readonly int s_BlitTextureID = Shader.PropertyToID("_BlitTexture");
+        private static readonly int s_BlitScaleBias = Shader.PropertyToID("_BlitScaleBias");
+        private static readonly int s_GlobalFullScreenBlurTextureID = Shader.PropertyToID("_GlobalUniversalBlurTexture");
+
+        private readonly ProfilingSampler _profilingSampler;
+        private readonly MaterialPropertyBlock _propertyBlock;
+
         private BlurPassData _blurPassData;
-        private int renderTextureId1;
-        private int renderTextureId2;
         
-        
-        public void Setup(BlurPassData blurPassData, in RenderingData renderingData)
+        public UniversalBlurPass()
+        {
+            _profilingSampler = new(k_PassName);
+            _propertyBlock = new();
+        }
+
+        public void Setup(BlurPassData blurPassData)
         {
             _blurPassData = blurPassData;
-            
-            renderTextureId1 = Shader.PropertyToID("Unified Blur RT1");
-            renderTextureId2 = Shader.PropertyToID("Unified Blur RT2");
         }
-        
+
         public void Dispose()
         {
+            // Nothing to dispose
         }
-        
-        [System.Diagnostics.Conditional("UNITY_EDITOR")]
-        public void DrawDefaultTexture()
+
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
-            // For better preview experience in editor, we just use a gray texture
-            Shader.SetGlobalTexture(m_globalFullScreenBlurTexture, Texture2D.linearGrayTexture);
-        }
-        
-        public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
-        {
-            ExecutePass(_blurPassData, ref renderingData, ref context);
-        }
-        
-        private void ExecutePass(BlurPassData blurPassData, ref RenderingData renderingData,
-            ref ScriptableRenderContext context)
-        {
-            var passMaterial = blurPassData.EffectMaterial;
-            var scale = blurPassData.Scale;
-            
-            // should not happen as we check it in feature
-            if (passMaterial == null)
-                return;
-            
-            if (renderingData.cameraData.isPreviewCamera)
-                return;
-            
-            if (renderingData.cameraData.isSceneViewCamera)
+            var resourceData = frameData.Get<UniversalResourceData>();
+
+            if (resourceData.isActiveTargetBackBuffer)
             {
-#if UNITY_EDITOR
-                // For better preview experience in editor, we just use a gray texture
-                Shader.SetGlobalTexture(m_globalFullScreenBlurTexture, Texture2D.linearGrayTexture);
-#endif
+                Debug.LogError(
+                    $"Skipping render pass. UniversalBlurPass requires an intermediate ColorTexture, we can't use the BackBuffer as a texture input.");
                 return;
             }
+
+            var cameraColorSource = resourceData.activeColorTexture;
             
-            CommandBuffer cmd = CommandBufferPool.Get(k_PassName);
+            var rtDescriptor = renderGraph.GetTextureDesc(cameraColorSource);
+            rtDescriptor.width = _blurPassData.Width;
+            rtDescriptor.height = _blurPassData.Height;
+            rtDescriptor.clearBuffer = false;
             
-            cmd.GetTemporaryRT(renderTextureId1, blurPassData.Descriptor, filter: FilterMode.Bilinear);
-            cmd.GetTemporaryRT(renderTextureId2, blurPassData.Descriptor, filter: FilterMode.Bilinear);
+            rtDescriptor.name = k_BlurTextureSourceName;
+            TextureHandle source = renderGraph.CreateTexture(rtDescriptor);
+            rtDescriptor.name = k_BlurTextureDestinationName;
+            TextureHandle destination = renderGraph.CreateTexture(rtDescriptor);
             
-            var cameraData = renderingData.cameraData;
-            
-            using (new ProfilingScope(cmd, m_ProfilingSampler))
+            using (var builder = renderGraph.AddUnsafePass<PassData>(k_PassName, out var passData, _profilingSampler))
             {
-                ProcessEffect(ref context);
+                passData.ColorSource = cameraColorSource;
+                passData.Source = source;
+                passData.Destination = destination;
+
+                passData.MaterialPropertyBlock = _propertyBlock;
+
+                passData.Material = _blurPassData.Material;
+                passData.ShaderPass = _blurPassData.ShaderPass;
+                passData.Iterations = _blurPassData.Iterations;
+                passData.Intensity = _blurPassData.Intensity;
+                passData.Downsample = _blurPassData.Downsample;
+                passData.Scale = _blurPassData.Scale;
+                passData.Offset = _blurPassData.Offset;
+                
+                
+                builder.AllowPassCulling(false);
+                
+                builder.UseTexture(source, AccessFlags.ReadWrite);
+                builder.UseTexture(destination, AccessFlags.ReadWrite);
+                
+                builder.SetGlobalTextureAfterPass(destination, s_GlobalFullScreenBlurTextureID);
+                
+                builder.SetRenderFunc((PassData data, UnsafeGraphContext ctx) => BlitMaterialRenderFunc(data, ctx));
+            }
+        }
+
+        private static void BlitMaterialRenderFunc(PassData data, UnsafeGraphContext ctx)
+        {
+            // Note: renderGraphPool.GetTempMaterialPropertyBlock is a preferable way to get a MaterialPropertyBlock,
+            // but it causes per-frame allocations in this context.
+            var mpb = data.MaterialPropertyBlock;
+            
+            mpb.Clear();
+            mpb.SetVector(s_BlitScaleBias, s_DefaultBlitBias);
+            
+            var source = data.Source;
+            var destination = data.Destination;
+            
+            // If the number of iterations is odd, it means that the last iteration will blit to the source texture
+            // So we need to swap the source and destination textures
+            if (data.Iterations % 2 == 1)
+            {
+                (source, destination) = (destination, source);
             }
             
-            context.ExecuteCommandBuffer(cmd);
-            CommandBufferPool.Release(cmd);
+            // Initial blit from camera color to allow blit between target textures
+            BlitTexture(ctx, data.ColorSource, source, data, mpb, CalculateOffset(data, 0));
             
-            // End of function
-            
-            void ProcessEffect(ref ScriptableRenderContext context)
+            for (int i = 1; i < data.Iterations; i++)
             {
-                var source =
-#if UNITY_2022_1_OR_NEWER
-                    cameraData.renderer.cameraColorTargetHandle;
-#else
-                        cameraData.renderer.cameraColorTarget;
-#endif
-                
-                // Setup
-                cmd.Blit(source, renderTextureId1);
-                
-                if (blurPassData.Intensity > 0f)
-                {
-                    SetBlurOffset(1.5f);
-                    Blit1To2();
-                    
-                    for (int i = 1; i <= blurPassData.Iterations; i++)
-                    {
-                        var offset = (0.5f + i * scale) * (blurPassData.Intensity / blurPassData.Downsample);
+                var offset = CalculateOffset(data, i);
                         
-                        SetBlurOffset(offset);
-                        Blit1To2();
-                        SwapRTs();
-                    }
-                }
-                else
-                {
-                    Blit1To2();
-                }
+                BlitTexture(ctx, source, destination, data, mpb, offset);
                 
-                cmd.SetGlobalTexture(m_globalFullScreenBlurTexture, renderTextureId2);
-                
-                cmd.ReleaseTemporaryRT(renderTextureId1);
-                cmd.ReleaseTemporaryRT(renderTextureId2);
+                (source, destination) = (destination, source);
             }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float CalculateOffset(PassData data, int iteration)
+        {
+            return (data.Offset + iteration * data.Scale) / data.Downsample * data.Intensity;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void BlitTexture(UnsafeGraphContext context, TextureHandle sourceHandle, TextureHandle destinationHandle,
+            PassData data, MaterialPropertyBlock mpb, float offset)
+        {
+            mpb.SetFloat(s_BlurOffsetID, offset);
+            mpb.SetTexture(s_BlitTextureID, sourceHandle);
             
-            void Blit1To2()
-            {
-                cmd.Blit(renderTextureId1, renderTextureId2, passMaterial, blurPassData.PassIndex);
-            }
-            
-            void SetBlurOffset(float offset)
-            {
-                cmd.SetGlobalFloat(m_KawaseOffsetID, offset);
-            }
-            
-            void SwapRTs()
-            {
-                (renderTextureId1, renderTextureId2) = (renderTextureId2, renderTextureId1);
-            }
+            // TODO: Implement mipLevel and depthSlice support, if relevant
+            context.cmd.SetRenderTarget(destinationHandle, 0, CubemapFace.Unknown, 0);
+            context.cmd.DrawProcedural(Matrix4x4.identity, data.Material, data.ShaderPass, MeshTopology.Quads, 4, 1, mpb);
         }
     }
 }

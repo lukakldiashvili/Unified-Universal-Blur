@@ -6,63 +6,44 @@ namespace Unified.UniversalBlur.Runtime
 {
     public class UniversalBlurFeature : ScriptableRendererFeature
     {
-        private enum InjectionPoint
-        {
-            BeforeRenderingTransparents = RenderPassEvent.BeforeRenderingTransparents,
-            BeforeRenderingPostProcessing = RenderPassEvent.BeforeRenderingPostProcessing,
-            AfterRenderingPostProcessing = RenderPassEvent.AfterRenderingPostProcessing
-        }
+        [Header("Blur Settings")]
+        [Range(1, 8)] [SerializeField] private int iterations = 4;
         
-        [field: SerializeField, HideInInspector] public int PassIndex { get; set; } = 0;
-
-        [field: Header("Blur Settings")]
-        [field: SerializeField] private InjectionPoint injectionPoint = InjectionPoint.AfterRenderingPostProcessing;
-
-        [field: Space]
-        [field: Range(0f, 1f)] [field: SerializeField] public float Intensity { get; set; } = 1.0f;
-        
+        [Range(0f, 1f)] [SerializeField] public float intensity = 1.0f;
         [Range(1f, 10f)] [SerializeField] private float downsample = 2.0f;
-        [Range(1, 20)] [SerializeField] private int iterations = 6;
-        [Range(0f, 5f)] [SerializeField] private float scale = .5f;
-        [SerializeField] private ScaleBlurWith scaleBlurWith;
+        [Range(0f, 10f)] [SerializeField] private float scale = 1f;
+        [Range(0f, 10f)] [SerializeField] private float offset = 2f;
+        
+        [Space]
+        
+        [Header("Advanced Settings")]
+        [SerializeField] private ScaleBlurWith scaleBlurWith = ScaleBlurWith.ScreenHeight;
         [SerializeField] private float scaleReferenceSize = 1080f;
+        
+        [Space]
+        
+        [SerializeField, ShowAsPass(nameof(_material))] public int shaderPass;
+        [Tooltip("For Overlay Canvas: AfterRenderingPostProcessing" +
+                 "\n\nOther: BeforeRenderingTransparents (will hide transparents)")]
+        [SerializeField] private RenderPassEvent injectionPoint = RenderPassEvent.AfterRenderingPostProcessing;
         
         [SerializeField]
         [HideInInspector]
-        [Reload("Shaders/KawaseBlur.shader")]
+        [Reload("Shaders/Blur.shader")]
         private Shader shader;
         
-        private readonly ScriptableRenderPassInput _requirements = ScriptableRenderPassInput.Color;
-        
-        public Material PassMaterial => _material;
-
-        // Hidden by scope because of incorrect behaviour in the editor
-        private bool disableInSceneView = true;
-        
         private Material _material;
-        private UniversalBlurPass _fullScreenPass;
-        private bool _injectedBeforeTransparents;
+        private UniversalBlurPass _blurPass;
         private float _renderScale; 
 
         /// <inheritdoc/>
         public override void Create()
         {
-            _fullScreenPass = new UniversalBlurPass();
-            _fullScreenPass.renderPassEvent = (RenderPassEvent)injectionPoint;
-
-            ScriptableRenderPassInput modifiedRequirements = _requirements;
-
-            var requiresColor = (_requirements & ScriptableRenderPassInput.Color) != 0;
-            _injectedBeforeTransparents = injectionPoint <= InjectionPoint.BeforeRenderingTransparents;
-
-            if (requiresColor && !_injectedBeforeTransparents)
-            {
-                modifiedRequirements ^= ScriptableRenderPassInput.Color;
-            }
-
-            _fullScreenPass.ConfigureInput(modifiedRequirements);
+            _blurPass = new UniversalBlurPass();
+            _blurPass.renderPassEvent = injectionPoint;
         }
 
+        /// <inheritdoc/>
         public override void OnCameraPreCull(ScriptableRenderer renderer, in CameraData cameraData)
         {
             base.OnCameraPreCull(renderer, in cameraData);
@@ -78,39 +59,61 @@ namespace Unified.UniversalBlur.Runtime
                 return;
             }
             
-            // Important to halt rendering here if camera is different, otherwise render textures will detect descriptor changes
-            if (renderingData.cameraData.isPreviewCamera ||
-                (renderingData.cameraData.isSceneViewCamera && disableInSceneView))
-            {
-                _fullScreenPass.DrawDefaultTexture();
-                
-                return;
-            }
-            
             var passData = GetBlurPassData(renderingData);
             
-            _fullScreenPass.Setup(passData, renderingData);
-
-            renderer.EnqueuePass(_fullScreenPass);
+            _blurPass.Setup(passData);
+            
+            renderer.EnqueuePass(_blurPass);
         }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            _fullScreenPass?.Dispose();
+            _blurPass?.Dispose();
             CoreUtils.Destroy(_material);
         }
     
         private bool TrySetShadersAndMaterials()
         {
-            if (shader == null)
-            {
-                shader = Shader.Find("Unified/KawaseBlur");
-            }
+            if (shader == null) 
+                shader = Shader.Find("Unify/Internal/Blur");
             
             if (_material == null && shader != null)
                 _material = CoreUtils.CreateEngineMaterial(shader);
+            
             return _material != null;
+        }
+        
+        private BlurPassData GetBlurPassData(in RenderingData renderingData)
+        {
+            var (width, height) = GetTargetResolution(renderingData);
+            
+            return new BlurPassData
+            {
+                Scale = CalculateScale(),
+                
+                Width = width,
+                Height = height,
+                
+                Material = _material,
+                Intensity = intensity,
+                Downsample = downsample,
+                Offset = offset,
+                ShaderPass = shaderPass,
+                Iterations = iterations,
+            };
+        }
+
+        private (int width, int height) GetTargetResolution(in RenderingData renderingData)
+        {
+            RenderTextureDescriptor descriptor = renderingData.cameraData.cameraTargetDescriptor;
+            
+            var width =
+                Mathf.RoundToInt(descriptor.width / downsample);
+            var height =
+                Mathf.RoundToInt(descriptor.height / downsample);
+
+            return (width, height);
         }
         
         private float CalculateScale() => scaleBlurWith switch
@@ -119,33 +122,5 @@ namespace Unified.UniversalBlur.Runtime
             ScaleBlurWith.ScreenWidth => scale * (Screen.width / scaleReferenceSize) * _renderScale,
             _ => scale
         };
-        
-        private BlurPassData GetBlurPassData(in RenderingData renderingData)
-        {
-            return new BlurPassData
-            {
-                Scale = CalculateScale(),
-                Descriptor = GetDescriptor(renderingData),
-                
-                EffectMaterial = _material,
-                Intensity = Intensity,
-                Downsample = downsample,
-                PassIndex = PassIndex,
-                Iterations = iterations,
-            };
-        }
-
-        private RenderTextureDescriptor GetDescriptor(in RenderingData renderingData)
-        {
-            RenderTextureDescriptor descriptor = renderingData.cameraData.cameraTargetDescriptor;
-            descriptor.depthBufferBits = (int)DepthBits.None;
-            
-            descriptor.width =
-                Mathf.RoundToInt(descriptor.width / downsample);
-            descriptor.height =
-                Mathf.RoundToInt(descriptor.height / downsample);
-
-            return descriptor;
-        }
     }
 }
