@@ -51,7 +51,7 @@ Shader "Unify/Internal/Blur"
                     uv.y = 1.0 - uv.y;
                 #endif
 
-                half4 color = KawaseBlur(_BlitTexture, uv, _BlurOffset, _BlitTexture_TexelSize);
+                half4 color = KawaseBlur(_BlitTexture, uv, _BlurOffset, _BlitTexture_TexelSize.xy);
                 return color;
             }
             ENDHLSL
