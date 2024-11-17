@@ -2,7 +2,7 @@
     "name": "com.unify.unified-universal-blur",
     "displayName": "Unified Blur",
     "description": "Unified Blur enables you to use translucent blur effect on your canvas.",
-    "version": "0.6.0",
+    "version": "0.6.1",
     "unity": "6000.1",
     "license": "MIT",
     "repository": {
