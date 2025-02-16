@@ -2,10 +2,10 @@ using UnityEngine;
 
 namespace Unified.UniversalBlur.Runtime
 {
-    internal struct BlurPassData
+    public struct BlurConfig
     {
         internal Material Material;
-        internal int ShaderPass;
+        internal BlurType BlurType;
         
         public float Downsample;
         public float Intensity;
