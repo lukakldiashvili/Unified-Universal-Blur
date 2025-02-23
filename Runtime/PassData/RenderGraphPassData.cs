@@ -1,3 +1,5 @@
+#if UNITY_6000_0_OR_NEWER
+
 using UnityEngine;
 using UnityEngine.Rendering.RenderGraphModule;
 
@@ -39,3 +41,4 @@ namespace Unified.UniversalBlur.Runtime.PassData
         }
     }
 }
+#endif

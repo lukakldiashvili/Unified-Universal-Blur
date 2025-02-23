@@ -32,6 +32,10 @@ int _Iteration;
 half _BlurOffset;
 half4 _BlurParams;
 
+#if UNITY_VERSION <= 600000
+half2 _BlitTexture_TexelSize;
+#endif
+
 // Settings
 #define TEXEL_SIZE _BlitTexture_TexelSize
 #define ITERATION _Iteration
@@ -129,7 +133,7 @@ half4 KawaseBlurCustom(Varyings input) : SV_Target
     uv.y = 1.0 - uv.y;
     #endif
 
-    half4 color = KawaseBlurFilterCustom(_BlitTexture, uv, OFFSET, _BlitTexture_TexelSize.xy);
+    half4 color = KawaseBlurFilterCustom(_BlitTexture, uv, OFFSET, TEXEL_SIZE.xy);
     return color;
 }
 

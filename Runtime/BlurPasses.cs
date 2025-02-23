@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Unified.UniversalBlur.Runtime.CommandBuffer;
 using Unified.UniversalBlur.Runtime.PassData;
 using UnityEngine;
 
@@ -47,8 +48,8 @@ namespace Unified.UniversalBlur.Runtime
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void BlitTexture(IWrappedCommandBuffer cmd, Texture sourceHandle, Texture destinationHandle,
-            BlurConfig blurConfig, MaterialPropertyBlock mpb, float offset, int iteration)
+        private static void BlitTexture<T>(T cmd, Texture sourceHandle, Texture destinationHandle,
+            BlurConfig blurConfig, MaterialPropertyBlock mpb, float offset, int iteration) where T : IWrappedCommandBuffer
         {
             mpb.SetInt(Constants.IterationId, iteration);
             mpb.SetVector(Constants.BlurParamsId, new Vector4(blurConfig.Intensity, blurConfig.Scale, blurConfig.Downsample, blurConfig.Offset));

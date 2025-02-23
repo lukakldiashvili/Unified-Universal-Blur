@@ -1,12 +1,14 @@
 using System;
+using Unified.UniversalBlur.Runtime.CommandBuffer;
 using Unified.UniversalBlur.Runtime.PassData;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Rendering.Universal;
 
-using BlitParams = UnityEngine.Rendering.RenderGraphModule.Util.RenderGraphUtils.BlitMaterialParameters;
+#if UNITY_6000_0_OR_NEWER
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 
 namespace Unified.UniversalBlur.Runtime
 {
@@ -38,6 +40,12 @@ namespace Unified.UniversalBlur.Runtime
         {
             // Nothing to dispose
         }
+        
+        public void DrawDefaultTexture()
+        {
+            // For better preview experience in editor, we just use a gray texture
+            Shader.SetGlobalTexture(Constants.GlobalFullScreenBlurTextureId, Texture2D.linearGrayTexture);
+        }
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
@@ -45,8 +53,14 @@ namespace Unified.UniversalBlur.Runtime
             
             var descriptor = new RenderTextureDescriptor(_blurConfig.Width, _blurConfig.Height, GraphicsFormat.B10G11R11_UFloatPack32, 0);
             
+            #if UNITY_6000_0_OR_NEWER
             RenderingUtils.ReAllocateHandleIfNeeded(ref _sourceRT, descriptor, FilterMode.Bilinear, TextureWrapMode.Clamp, name: k_BlurTextureSourceName);
             RenderingUtils.ReAllocateHandleIfNeeded(ref _destinationRT, descriptor, FilterMode.Bilinear, TextureWrapMode.Clamp, name: k_BlurTextureDestinationName);
+            #else
+            RenderingUtils.ReAllocateIfNeeded(ref _sourceRT, descriptor, FilterMode.Bilinear, TextureWrapMode.Clamp, name: k_BlurTextureSourceName);
+            RenderingUtils.ReAllocateIfNeeded(ref _destinationRT, descriptor, FilterMode.Bilinear, TextureWrapMode.Clamp, name: k_BlurTextureDestinationName);
+            #endif
+            
 
             var colorTarget = renderingData.cameraData.renderer.cameraColorTargetHandle;
 
@@ -68,6 +82,7 @@ namespace Unified.UniversalBlur.Runtime
             CommandBufferPool.Release(cmd);
         }
 
+#if UNITY_6000_0_OR_NEWER
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
             var resourceData = frameData.Get<UniversalResourceData>();
@@ -114,5 +129,6 @@ namespace Unified.UniversalBlur.Runtime
                 });
             }
         }
+#endif
     }
 }
