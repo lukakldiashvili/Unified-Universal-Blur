@@ -4,15 +4,14 @@
 <strong>Unified Blur</strong>
 </h1>
 
-*Enhance your project quality with a clean and performant screen blur effect, built for Unity 6 and beyond using Render Graph.*
+*Enhance your project quality with a clean and performant screen blur effect, built for Unity 6 and beyond using Render Graph (now with legacy support integrated).*
 
 [![Latest release](https://img.shields.io/github/v/release/lukakldiashvili/Unified-Universal-Blur?label=Latest%20release&style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/releases)
 [![Stars](https://img.shields.io/github/stars/lukakldiashvili/Unified-Universal-Blur?style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/stargazers)
 [![Fork](https://img.shields.io/github/forks/lukakldiashvili/Unified-Universal-Blur?style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/network/members)
 [![Watchers](https://img.shields.io/github/watchers/lukakldiashvili/Unified-Universal-Blur?style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/watchers)
 
-<img align="left" alt="Unsupported" src="https://img.shields.io/badge/Unsupported-<=_2022.3-red?style=flat-square" style="margin-right: 4px;"/> 
-<img align="left" alt="Supported" src="https://img.shields.io/badge/Supported->_6000.1-green?style=flat-square" style="margin-right: 4px;"/>
+<img align="left" alt="Supported" src="https://img.shields.io/badge/Supported Version->=_2023.3-green?style=flat-square" style="margin-right: 4px;"/>
 <img align="right" alt="URP" src="https://img.shields.io/badge/URP-Yes-green?style=flat-square" style="margin-left: 4px;"/>
 <img align="right" alt="HDRP" src="https://img.shields.io/badge/HDRP-No-red?style=flat-square" style="margin-left: 4px;"/>
 <img align="right" alt="BIRP" src="https://img.shields.io/badge/BIRP-No-red?style=flat-square" style="margin-left: 4px;"/>
@@ -24,8 +23,7 @@
 
 **Unified Blur** is a powerful and flexible screen blur effect for Unity, built using the new Render Graph API. It is designed to be easy to use, efficient, and highly customizable. Unified Blur is perfect for creating clean translucent effect for you application.
 
-> **Note:** Since Unified Blur is built on top of new Render Graph API, it is not compatible with older versions of Unity.<br>
-> To access last version of Unified Blur that supports older versions of Unity, please visit [Latest Legacy Branch](https://github.com/lukakldiashvili/Unified-Universal-Blur/tree/legacy/0.4.1).
+> **Update:** You can now use Unified Blur in compatibility mode for Unity 6. It has also been ported for older versions of Unity (may not work for versions before 2022.3, please open an issue in that case).<br>
 
 ---
 
