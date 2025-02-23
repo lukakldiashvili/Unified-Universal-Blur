@@ -11,7 +11,7 @@
 [![Fork](https://img.shields.io/github/forks/lukakldiashvili/Unified-Universal-Blur?style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/network/members)
 [![Watchers](https://img.shields.io/github/watchers/lukakldiashvili/Unified-Universal-Blur?style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/watchers)
 
-<img align="left" alt="Supported" src="https://img.shields.io/badge/Supported Version->=_2023.3-green?style=flat-square" style="margin-right: 4px;"/>
+<img align="left" alt="Supported" src="https://img.shields.io/badge/Supported Version->=_2022.3-green?style=flat-square" style="margin-right: 4px;"/>
 <img align="right" alt="URP" src="https://img.shields.io/badge/URP-Yes-green?style=flat-square" style="margin-left: 4px;"/>
 <img align="right" alt="HDRP" src="https://img.shields.io/badge/HDRP-No-red?style=flat-square" style="margin-left: 4px;"/>
 <img align="right" alt="BIRP" src="https://img.shields.io/badge/BIRP-No-red?style=flat-square" style="margin-left: 4px;"/>
