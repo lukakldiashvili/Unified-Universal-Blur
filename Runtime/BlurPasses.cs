@@ -1,60 +1,62 @@
 using System.Runtime.CompilerServices;
+using Unified.UniversalBlur.Runtime.PassData;
 using UnityEngine;
-using UnityEngine.Rendering.RenderGraphModule;
 
 namespace Unified.UniversalBlur.Runtime
 {
     public static class BlurPasses
     {
-        public static void KawaseExecutePass(PassData data, UnsafeGraphContext ctx)
+        public static void KawaseExecutePass<TPass, T>(TPass data, T cmd) where TPass : IPassData where T : IWrappedCommandBuffer
         {
             // Note: renderGraphPool.GetTempMaterialPropertyBlock is a preferable way to get a MaterialPropertyBlock,
             // but it causes per-frame allocations in this context.
-            var mpb = data.MaterialPropertyBlock;
+            var mpb = data.GetMaterialPropertyBlock();
             
             mpb.Clear();
             mpb.SetVector(Constants.BlitScaleBiasId, Constants.DefaultBlitBias);
-            
-            var source = data.Source;
-            var destination = data.Destination;
+
+            var blurConfig = data.GetBlurConfig();
+            var colorSource = data.GetColorSource();
+            var source = data.GetSource();
+            var destination = data.GetDestination();
             
             // If the number of iterations is odd, it means that the last iteration will blit to the source texture
             // So we need to swap the source and destination textures
-            if (data.BlurConfig.Iterations % 2 == 1)
+            if (blurConfig.Iterations % 2 == 1)
             {
                 (source, destination) = (destination, source);
             }
             
             // Initial blit from camera color to allow blit between target textures
-            BlitTexture(ctx, data.ColorSource, source, data, mpb, CalculateOffset(data, 0), 0);
+            BlitTexture(cmd, colorSource, source, blurConfig, mpb, CalculateOffset(blurConfig, 0), 0);
             
-            for (int i = 1; i < data.BlurConfig.Iterations; i++)
+            for (int i = 1; i < blurConfig.Iterations; i++)
             {
-                var offset = CalculateOffset(data, i);
+                var offset = CalculateOffset(blurConfig, i);
                         
-                BlitTexture(ctx, source, destination, data, mpb, offset, i - 1);
+                BlitTexture(cmd, source, destination, blurConfig, mpb, offset, i - 1);
                 
                 (source, destination) = (destination, source);
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float CalculateOffset(PassData data, int iteration)
+        private static float CalculateOffset(BlurConfig blurConfig, int iteration)
         {
-            return (data.BlurConfig.Offset + iteration * data.BlurConfig.Scale) / data.BlurConfig.Downsample * data.BlurConfig.Intensity;
+            return (blurConfig.Offset + iteration * blurConfig.Scale) / blurConfig.Downsample * blurConfig.Intensity;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void BlitTexture(UnsafeGraphContext context, TextureHandle sourceHandle, TextureHandle destinationHandle,
-            PassData data, MaterialPropertyBlock mpb, float offset, int iteration)
+        private static void BlitTexture(IWrappedCommandBuffer cmd, Texture sourceHandle, Texture destinationHandle,
+            BlurConfig blurConfig, MaterialPropertyBlock mpb, float offset, int iteration)
         {
             mpb.SetInt(Constants.IterationId, iteration);
-            mpb.SetVector(Constants.BlurParamsId, new Vector4(data.BlurConfig.Intensity, data.BlurConfig.Scale, data.BlurConfig.Downsample, data.BlurConfig.Offset));
+            mpb.SetVector(Constants.BlurParamsId, new Vector4(blurConfig.Intensity, blurConfig.Scale, blurConfig.Downsample, blurConfig.Offset));
             mpb.SetTexture(Constants.BlitTextureId, sourceHandle);
             
             // TODO: Implement mipLevel and depthSlice support, if relevant
-            context.cmd.SetRenderTarget(destinationHandle, 0, CubemapFace.Unknown, 0);
-            context.cmd.DrawProcedural(Matrix4x4.identity, data.BlurConfig.Material, 0, MeshTopology.Quads, 4, 1, mpb);
+            cmd.SetRenderTarget(destinationHandle, 0, CubemapFace.Unknown, 0);
+            cmd.DrawProcedural(Matrix4x4.identity, blurConfig.Material, 0, MeshTopology.Quads, 4, 1, mpb);
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
-using System.Runtime.CompilerServices;
+using Unified.UniversalBlur.Runtime.PassData;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Rendering.Universal;
@@ -19,6 +20,8 @@ namespace Unified.UniversalBlur.Runtime
         private readonly MaterialPropertyBlock _propertyBlock;
 
         private BlurConfig _blurConfig;
+        private RTHandle _sourceRT;
+        private RTHandle _destinationRT;
         
         public UniversalBlurPass()
         {
@@ -34,6 +37,35 @@ namespace Unified.UniversalBlur.Runtime
         public void Dispose()
         {
             // Nothing to dispose
+        }
+
+        public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
+        {
+            var cmd = CommandBufferPool.Get();
+            
+            var descriptor = new RenderTextureDescriptor(_blurConfig.Width, _blurConfig.Height, GraphicsFormat.B10G11R11_UFloatPack32, 0);
+            
+            RenderingUtils.ReAllocateHandleIfNeeded(ref _sourceRT, descriptor, FilterMode.Bilinear, TextureWrapMode.Clamp, name: k_BlurTextureSourceName);
+            RenderingUtils.ReAllocateHandleIfNeeded(ref _destinationRT, descriptor, FilterMode.Bilinear, TextureWrapMode.Clamp, name: k_BlurTextureDestinationName);
+
+            var colorTarget = renderingData.cameraData.renderer.cameraColorTargetHandle;
+
+            using (new ProfilingScope(cmd, _profilingSampler))
+            {
+                BlurPasses.KawaseExecutePass(new LegacyPassData()
+                {
+                    BlurConfig = _blurConfig,
+                    MaterialPropertyBlock = _propertyBlock,
+                    ColorSource = colorTarget,
+                    Source = _sourceRT,
+                    Destination = _destinationRT
+                }, new WrappedCommandBuffer(cmd));
+
+                cmd.SetGlobalTexture(Constants.GlobalFullScreenBlurTextureId, _destinationRT);
+            }
+
+            context.ExecuteCommandBuffer(cmd);
+            CommandBufferPool.Release(cmd);
         }
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
@@ -59,7 +91,7 @@ namespace Unified.UniversalBlur.Runtime
             rtDescriptor.name = k_BlurTextureDestinationName;
             TextureHandle destination = renderGraph.CreateTexture(rtDescriptor);
             
-            using (var builder = renderGraph.AddUnsafePass<PassData>(k_PassName, out var passData, _profilingSampler))
+            using (var builder = renderGraph.AddUnsafePass<RenderGraphPassData>(k_PassName, out var passData, _profilingSampler))
             {
                 passData.ColorSource = cameraColorSource;
                 passData.Source = source;
@@ -76,7 +108,10 @@ namespace Unified.UniversalBlur.Runtime
                 
                 builder.SetGlobalTextureAfterPass(destination, Constants.GlobalFullScreenBlurTextureId);
                 
-                builder.SetRenderFunc<PassData>(BlurPasses.KawaseExecutePass);
+                builder.SetRenderFunc<RenderGraphPassData>((data, ctx) =>
+                {
+                    BlurPasses.KawaseExecutePass(data, new WrappedUnsafeCommandBuffer(ctx.cmd));
+                });
             }
         }
     }
