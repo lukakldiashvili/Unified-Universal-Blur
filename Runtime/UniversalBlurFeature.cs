@@ -9,10 +9,14 @@ namespace Unified.UniversalBlur.Runtime
         [Header("Blur Settings")]
         [Range(1, 8)] [SerializeField] private int iterations = 4;
         
+        [Space]
+        
         [Range(0f, 1f)] [SerializeField] public float intensity = 1.0f;
         [Range(1f, 10f)] [SerializeField] private float downsample = 2.0f;
-        [Range(0f, 10f)] [SerializeField] private float scale = 1f;
-        [Range(0f, 10f)] [SerializeField] private float offset = 2f;
+        // [Range(0f, 10f)] 
+        [SerializeField] private float scale = 1f;
+        // [Range(0f, 10f)] 
+        [SerializeField] private float offset = 2f;
         
         [Space]
         
@@ -22,7 +26,9 @@ namespace Unified.UniversalBlur.Runtime
         
         [Space]
         
-        [SerializeField, ShowAsPass(nameof(_material))] public int shaderPass;
+        // [SerializeField, ShowAsPass(nameof(_material))] public int shaderPass;
+        [SerializeField] private BlurType blurType;
+        
         [Tooltip("For Overlay Canvas: AfterRenderingPostProcessing" +
                  "\n\nOther: BeforeRenderingTransparents (will hide transparents)")]
         [SerializeField] private RenderPassEvent injectionPoint = RenderPassEvent.AfterRenderingPostProcessing;
@@ -59,7 +65,16 @@ namespace Unified.UniversalBlur.Runtime
                 return;
             }
             
-            var passData = GetBlurPassData(renderingData);
+            // Important to halt rendering here if camera is different, otherwise render textures will detect descriptor changes
+            if (renderingData.cameraData.isPreviewCamera ||
+                (renderingData.cameraData.isSceneViewCamera))
+            {
+                _blurPass.DrawDefaultTexture();
+                
+                return;
+            }
+            
+            var passData = GetBlurConfig(renderingData);
             
             _blurPass.Setup(passData);
             
@@ -84,11 +99,11 @@ namespace Unified.UniversalBlur.Runtime
             return _material != null;
         }
         
-        private BlurPassData GetBlurPassData(in RenderingData renderingData)
+        private BlurConfig GetBlurConfig(in RenderingData renderingData)
         {
             var (width, height) = GetTargetResolution(renderingData);
             
-            return new BlurPassData
+            return new BlurConfig
             {
                 Scale = CalculateScale(),
                 
@@ -99,7 +114,7 @@ namespace Unified.UniversalBlur.Runtime
                 Intensity = intensity,
                 Downsample = downsample,
                 Offset = offset,
-                ShaderPass = shaderPass,
+                BlurType = blurType,
                 Iterations = iterations,
             };
         }
