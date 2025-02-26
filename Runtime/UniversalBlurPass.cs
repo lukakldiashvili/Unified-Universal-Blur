@@ -47,13 +47,20 @@ namespace Unified.UniversalBlur.Runtime
             Shader.SetGlobalTexture(Constants.GlobalFullScreenBlurTextureId, Texture2D.linearGrayTexture);
         }
 
+        private RenderTextureDescriptor GetDescriptor() =>
+            new(_blurConfig.Width, _blurConfig.Height, GraphicsFormat.B10G11R11_UFloatPack32, 0)
+            {
+                useMipMap = _blurConfig.EnableMipMaps,
+                autoGenerateMips = _blurConfig.EnableMipMaps
+            };
+
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             var cmd = CommandBufferPool.Get();
-            
-            var descriptor = new RenderTextureDescriptor(_blurConfig.Width, _blurConfig.Height, GraphicsFormat.B10G11R11_UFloatPack32, 0);
-            
-            #if UNITY_6000_0_OR_NEWER
+
+            var descriptor = GetDescriptor();
+
+#if UNITY_6000_0_OR_NEWER
             RenderingUtils.ReAllocateHandleIfNeeded(ref _sourceRT, descriptor, FilterMode.Bilinear, TextureWrapMode.Clamp, name: k_BlurTextureSourceName);
             RenderingUtils.ReAllocateHandleIfNeeded(ref _destinationRT, descriptor, FilterMode.Bilinear, TextureWrapMode.Clamp, name: k_BlurTextureDestinationName);
             #else
@@ -96,15 +103,12 @@ namespace Unified.UniversalBlur.Runtime
 
             var cameraColorSource = resourceData.activeColorTexture;
             
-            var rtDescriptor = renderGraph.GetTextureDesc(cameraColorSource);
-            rtDescriptor.width = _blurConfig.Width;
-            rtDescriptor.height = _blurConfig.Height;
-            rtDescriptor.clearBuffer = false;
-            
-            rtDescriptor.name = k_BlurTextureSourceName;
-            TextureHandle source = renderGraph.CreateTexture(rtDescriptor);
-            rtDescriptor.name = k_BlurTextureDestinationName;
-            TextureHandle destination = renderGraph.CreateTexture(rtDescriptor);
+            var descriptor = new TextureDesc(GetDescriptor());
+
+            descriptor.name = k_BlurTextureSourceName;
+            TextureHandle source = renderGraph.CreateTexture(descriptor);
+            descriptor.name = k_BlurTextureDestinationName;
+            TextureHandle destination = renderGraph.CreateTexture(descriptor);
             
             using (var builder = renderGraph.AddUnsafePass<RenderGraphPassData>(k_PassName, out var passData, _profilingSampler))
             {

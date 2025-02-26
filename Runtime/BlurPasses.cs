@@ -44,7 +44,7 @@ namespace Unified.UniversalBlur.Runtime
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float CalculateOffset(BlurConfig blurConfig, int iteration)
         {
-            return (blurConfig.Offset + iteration * blurConfig.Scale) / blurConfig.Downsample * blurConfig.Intensity;
+            return (blurConfig.Offset + iteration * blurConfig.Scale) / blurConfig.Downsample;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -55,7 +55,9 @@ namespace Unified.UniversalBlur.Runtime
             mpb.SetVector(Constants.BlurParamsId, new Vector4(blurConfig.Intensity, blurConfig.Scale, blurConfig.Downsample, blurConfig.Offset));
             mpb.SetTexture(Constants.BlitTextureId, sourceHandle);
             
-            // TODO: Implement mipLevel and depthSlice support, if relevant
+            // TODO: add a lookup for getting mipmap level from offset value
+            mpb.SetFloat(Constants.BlitMipLevelId, blurConfig.EnableMipMaps ? Mathf.Log(offset, 2) : 0);
+            
             cmd.SetRenderTarget(destinationHandle, 0, CubemapFace.Unknown, 0);
             cmd.DrawProcedural(Matrix4x4.identity, blurConfig.Material, 0, MeshTopology.Quads, 4, 1, mpb);
         }

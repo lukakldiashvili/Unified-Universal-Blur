@@ -10,9 +10,7 @@ SAMPLER(sampler_BlitTexture);
 // Function defines
 #define SAMPLE(textureName, coord2) SAMPLE_TEXTURE2D_LOD(textureName, sampler_LinearClamp, coord2, _BlitMipLevel);
 
-#define SAMPLE_BASEMAP(uv)          half4(SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_BlitTexture, UnityStereoTransformScreenSpaceTex(uv)));
-#define SAMPLE_BASEMAP_R(uv)        half(SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_BlitTexture, UnityStereoTransformScreenSpaceTex(uv)).r);
-
+#define SAMPLE_BASEMAP(uv) half4(SAMPLE_TEXTURE2D_LOD(_BlitTexture, sampler_LinearClamp, UnityStereoTransformScreenSpaceTex(uv), _BlitMipLevel));
 
 // Constants
 static const half  HALF_POINT_ONE   = half(0.1);
@@ -186,7 +184,7 @@ half4 KawaseBlur(Varyings input) : SV_Target
     half2 uv = input.texcoord;
     half2 texelSize = TEXEL_SIZE.xy * rcp(DOWNSAMPLE);
 
-    half4 col = KawaseBlurFilter(uv, texelSize, ITERATION);
-
+    half4 col = KawaseBlurFilter(uv, texelSize * INTENSITY, ITERATION * OFFSET);
+    
     return col;
 }
