@@ -10,6 +10,7 @@ namespace Unified.UniversalBlur.Runtime
         public static readonly int BlurParamsId = Shader.PropertyToID("_BlurParams");
         public static readonly int BlitTextureId = Shader.PropertyToID("_BlitTexture");
         public static readonly int BlitScaleBiasId = Shader.PropertyToID("_BlitScaleBias");
+        public static readonly int BlitMipLevelId = Shader.PropertyToID("_BlitMipLevel");
         public static readonly int GlobalFullScreenBlurTextureId = Shader.PropertyToID("_GlobalUniversalBlurTexture");
     }
 }

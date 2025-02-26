@@ -15,5 +15,7 @@ namespace Unified.UniversalBlur.Runtime
 
         public int Width;
         public int Height;
+
+        public bool EnableMipMaps;
     }
 }

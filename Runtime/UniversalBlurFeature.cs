@@ -7,16 +7,15 @@ namespace Unified.UniversalBlur.Runtime
     public class UniversalBlurFeature : ScriptableRendererFeature
     {
         [Header("Blur Settings")]
-        [Range(1, 8)] [SerializeField] private int iterations = 4;
-        
-        [Space]
-        
-        [Range(0f, 1f)] [SerializeField] public float intensity = 1.0f;
+        [Range(1, 12)] [SerializeField] private int iterations = 4;
         [Range(1f, 10f)] [SerializeField] private float downsample = 2.0f;
+        
+        [Tooltip("Enable mipmaps for more efficient blur")]
+        [SerializeField] private bool enableMipMaps = true;
         // [Range(0f, 10f)] 
         [SerializeField] private float scale = 1f;
         // [Range(0f, 10f)] 
-        [SerializeField] private float offset = 2f;
+        [SerializeField] private float offset = 1f;
         
         [Space]
         
@@ -33,6 +32,8 @@ namespace Unified.UniversalBlur.Runtime
                  "\n\nOther: BeforeRenderingTransparents (will hide transparents)")]
         [SerializeField] private RenderPassEvent injectionPoint = RenderPassEvent.AfterRenderingPostProcessing;
         
+        private float _intensity = 1.0f;
+        
         [SerializeField]
         [HideInInspector]
         [Reload("Shaders/Blur.shader")]
@@ -41,6 +42,13 @@ namespace Unified.UniversalBlur.Runtime
         private Material _material;
         private UniversalBlurPass _blurPass;
         private float _renderScale; 
+        
+        // Avoid changing intensity value, but useful for transitions
+        public float Intensity
+        {
+            get => _intensity;
+            set => _intensity = Mathf.Clamp(value, 0f, 1f);
+        }
 
         /// <inheritdoc/>
         public override void Create()
@@ -111,11 +119,13 @@ namespace Unified.UniversalBlur.Runtime
                 Height = height,
                 
                 Material = _material,
-                Intensity = intensity,
+                Intensity = _intensity,
                 Downsample = downsample,
                 Offset = offset,
                 BlurType = blurType,
                 Iterations = iterations,
+                
+                EnableMipMaps = enableMipMaps
             };
         }
 
