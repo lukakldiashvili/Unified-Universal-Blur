@@ -15,7 +15,7 @@
         "url": "https://github.com/lukakldiashvili"
     },
     "dependencies": {
-        "com.unity.render-pipelines.universal": "17.0.3"
+        "com.unity.render-pipelines.universal": "14.0.11"
     },
     "keywords": [
         "unify",
