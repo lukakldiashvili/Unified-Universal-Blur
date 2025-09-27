@@ -34,6 +34,9 @@ namespace Unified.UniversalBlur.Runtime
         public void Setup(BlurConfig blurConfig)
         {
             _blurConfig = blurConfig;
+
+            // declare the need for intermediate texture
+            ConfigureInput(ScriptableRenderPassInput.Color);
         }
 
         public void Dispose()
