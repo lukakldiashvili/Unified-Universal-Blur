@@ -29,6 +29,8 @@ namespace Unified.UniversalBlur.Runtime
         {
             _profilingSampler = new(k_PassName);
             _propertyBlock = new();
+            
+            requiresIntermediateTexture = true;
         }
 
         public void Setup(BlurConfig blurConfig)
@@ -93,7 +95,7 @@ namespace Unified.UniversalBlur.Runtime
         }
 
 #if UNITY_6000_0_OR_NEWER
-        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+    public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
             var resourceData = frameData.Get<UniversalResourceData>();
 
