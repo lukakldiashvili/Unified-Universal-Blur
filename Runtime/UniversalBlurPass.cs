@@ -24,7 +24,7 @@ namespace Unified.UniversalBlur.Runtime
         private BlurConfig _blurConfig;
         private RTHandle _sourceRT;
         private RTHandle _destinationRT;
-        
+
         public UniversalBlurPass()
         {
             _profilingSampler = new(k_PassName);
@@ -43,7 +43,7 @@ namespace Unified.UniversalBlur.Runtime
         {
             // Nothing to dispose
         }
-        
+
         public void DrawDefaultTexture()
         {
             // For better preview experience in editor, we just use a gray texture
@@ -57,20 +57,16 @@ namespace Unified.UniversalBlur.Runtime
                 autoGenerateMips = _blurConfig.EnableMipMaps
             };
 
+#if !UNITY_6000_0_OR_NEWER
+        // Compatibility Mode (compiled on Unity versions before 6)
+        // In URP 17 no longer exposes this method, prevent CS0115 with !Unity.
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             var cmd = CommandBufferPool.Get();
-
             var descriptor = GetDescriptor();
 
-#if UNITY_6000_0_OR_NEWER
-            RenderingUtils.ReAllocateHandleIfNeeded(ref _sourceRT, descriptor, FilterMode.Bilinear, TextureWrapMode.Clamp, name: k_BlurTextureSourceName);
-            RenderingUtils.ReAllocateHandleIfNeeded(ref _destinationRT, descriptor, FilterMode.Bilinear, TextureWrapMode.Clamp, name: k_BlurTextureDestinationName);
-            #else
             RenderingUtils.ReAllocateIfNeeded(ref _sourceRT, descriptor, FilterMode.Bilinear, TextureWrapMode.Clamp, name: k_BlurTextureSourceName);
             RenderingUtils.ReAllocateIfNeeded(ref _destinationRT, descriptor, FilterMode.Bilinear, TextureWrapMode.Clamp, name: k_BlurTextureDestinationName);
-            #endif
-            
 
             var colorTarget = renderingData.cameraData.renderer.cameraColorTargetHandle;
 
@@ -91,7 +87,9 @@ namespace Unified.UniversalBlur.Runtime
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }
+#endif
 
+        // RecordRenderGraph is the only execution path in URP 17
 #if UNITY_6000_0_OR_NEWER
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
@@ -100,36 +98,34 @@ namespace Unified.UniversalBlur.Runtime
             if (resourceData.isActiveTargetBackBuffer)
             {
                 Debug.LogError(
-                    $"Skipping render pass. UniversalBlurPass requires an intermediate ColorTexture, we can't use the BackBuffer as a texture input.");
+                    "Skipping render pass. UniversalBlurPass requires an intermediate ColorTexture, we can't use the BackBuffer as a texture input.");
                 return;
             }
 
             var cameraColorSource = resourceData.activeColorTexture;
-            
+
             var descriptor = new TextureDesc(GetDescriptor());
 
             descriptor.name = k_BlurTextureSourceName;
             TextureHandle source = renderGraph.CreateTexture(descriptor);
             descriptor.name = k_BlurTextureDestinationName;
             TextureHandle destination = renderGraph.CreateTexture(descriptor);
-            
+
             using (var builder = renderGraph.AddUnsafePass<RenderGraphPassData>(k_PassName, out var passData, _profilingSampler))
             {
                 passData.ColorSource = cameraColorSource;
                 passData.Source = source;
                 passData.Destination = destination;
-
                 passData.MaterialPropertyBlock = _propertyBlock;
-                
                 passData.BlurConfig = _blurConfig;
-                
+
                 builder.AllowPassCulling(false);
-                
+
                 builder.UseTexture(source, AccessFlags.ReadWrite);
                 builder.UseTexture(destination, AccessFlags.ReadWrite);
-                
+
                 builder.SetGlobalTextureAfterPass(destination, Constants.GlobalFullScreenBlurTextureId);
-                
+
                 builder.SetRenderFunc<RenderGraphPassData>((data, ctx) =>
                 {
                     BlurPasses.KawaseExecutePass(data, new WrappedUnsafeCommandBuffer(ctx.cmd));
