@@ -50,6 +50,65 @@ namespace Unified.UniversalBlur.Runtime
             set => _intensity = Mathf.Clamp(value, 0f, 1f);
         }
 
+        public int Iterations
+        {
+            get => iterations;
+            set => iterations = Mathf.Clamp(value, 1, 12);
+        }
+
+        public float Downsample
+        {
+            get => downsample;
+            set => downsample = Mathf.Clamp(value, 1f, 10f);
+        }
+
+        public bool EnableMipMaps
+        {
+            get => enableMipMaps;
+            set => enableMipMaps = value;
+        }
+
+        public float Scale
+        {
+            get => scale;
+            set => scale = value;
+        }
+
+        public float Offset
+        {
+            get => offset;
+            set => offset = value;
+        }
+
+        public BlurType BlurType
+        {
+            get => blurType;
+            set => blurType = value;
+        }
+
+        public ScaleBlurWith ScaleBlurWith
+        {
+            get => scaleBlurWith;
+            set => scaleBlurWith = value;
+        }
+
+        public float ScaleReferenceSize
+        {
+            get => scaleReferenceSize;
+            set => scaleReferenceSize = value;
+        }
+
+        public RenderPassEvent InjectionPoint
+        {
+            get => injectionPoint;
+            set
+            {
+                injectionPoint = value;
+                if (_blurPass != null)
+                    _blurPass.renderPassEvent = value;
+            }
+        }
+
         /// <inheritdoc/>
         public override void Create()
         {
