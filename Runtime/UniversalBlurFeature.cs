@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
@@ -168,36 +169,34 @@ namespace Unified.UniversalBlur.Runtime
         
         private BlurConfig GetBlurConfig(in RenderingData renderingData)
         {
-            var (width, height) = GetTargetResolution(renderingData);
-            
+            RenderTextureDescriptor descriptor = renderingData.cameraData.cameraTargetDescriptor;
+
+            var width = Mathf.RoundToInt(descriptor.width / downsample);
+            var height = Mathf.RoundToInt(descriptor.height / downsample);
+
+            // Match the camera target format when HDR is on, otherwise keep the efficient SDR packed format.
+            var graphicsFormat = renderingData.cameraData.isHdrEnabled && descriptor.graphicsFormat != GraphicsFormat.None
+                ? descriptor.graphicsFormat
+                : GraphicsFormat.B10G11R11_UFloatPack32;
+
             return new BlurConfig
             {
                 Scale = CalculateScale(),
-                
+
                 Width = width,
                 Height = height,
-                
+
+                GraphicsFormat = graphicsFormat,
+
                 Material = _material,
                 Intensity = _intensity,
                 Downsample = downsample,
                 Offset = offset,
                 BlurType = blurType,
                 Iterations = iterations,
-                
+
                 EnableMipMaps = enableMipMaps
             };
-        }
-
-        private (int width, int height) GetTargetResolution(in RenderingData renderingData)
-        {
-            RenderTextureDescriptor descriptor = renderingData.cameraData.cameraTargetDescriptor;
-            
-            var width =
-                Mathf.RoundToInt(descriptor.width / downsample);
-            var height =
-                Mathf.RoundToInt(descriptor.height / downsample);
-
-            return (width, height);
         }
         
         private float CalculateScale() => scaleBlurWith switch

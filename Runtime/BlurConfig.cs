@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 namespace Unified.UniversalBlur.Runtime
 {
@@ -6,7 +7,7 @@ namespace Unified.UniversalBlur.Runtime
     {
         internal Material Material;
         internal BlurType BlurType;
-        
+
         public float Downsample;
         public float Intensity;
         public float Scale;
@@ -15,6 +16,8 @@ namespace Unified.UniversalBlur.Runtime
 
         public int Width;
         public int Height;
+
+        public GraphicsFormat GraphicsFormat;
 
         public bool EnableMipMaps;
     }

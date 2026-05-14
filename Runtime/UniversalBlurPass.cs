@@ -51,7 +51,7 @@ namespace Unified.UniversalBlur.Runtime
         }
 
         private RenderTextureDescriptor GetDescriptor() =>
-            new(_blurConfig.Width, _blurConfig.Height, GraphicsFormat.B10G11R11_UFloatPack32, 0)
+            new(_blurConfig.Width, _blurConfig.Height, _blurConfig.GraphicsFormat, 0)
             {
                 useMipMap = _blurConfig.EnableMipMaps,
                 autoGenerateMips = _blurConfig.EnableMipMaps
