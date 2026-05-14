@@ -57,6 +57,7 @@ namespace Unified.UniversalBlur.Runtime
                 autoGenerateMips = _blurConfig.EnableMipMaps
             };
 
+#if !UNITY_6000_4_OR_NEWER
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             var cmd = CommandBufferPool.Get();
@@ -91,7 +92,8 @@ namespace Unified.UniversalBlur.Runtime
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }
-
+#endif
+        
 #if UNITY_6000_0_OR_NEWER
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
