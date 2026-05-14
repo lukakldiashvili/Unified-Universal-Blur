@@ -8,9 +8,10 @@
 SAMPLER(sampler_BlitTexture);
 
 // Function defines
-#define SAMPLE(textureName, coord2) SAMPLE_TEXTURE2D_LOD(textureName, sampler_LinearClamp, coord2, _BlitMipLevel);
+// SAMPLE_TEXTURE2D_X_LOD handles both Texture2D and Texture2DArray for stereo (uses unity_StereoEyeIndex).
+#define SAMPLE(textureName, coord2) SAMPLE_TEXTURE2D_X_LOD(textureName, sampler_LinearClamp, coord2, _BlitMipLevel);
 
-#define SAMPLE_BASEMAP(uv) half4(SAMPLE_TEXTURE2D_LOD(_BlitTexture, sampler_LinearClamp, UnityStereoTransformScreenSpaceTex(uv), _BlitMipLevel));
+#define SAMPLE_BASEMAP(uv) half4(SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, UnityStereoTransformScreenSpaceTex(uv), _BlitMipLevel));
 
 // Constants
 static const half  HALF_POINT_ONE   = half(0.1);
@@ -102,17 +103,17 @@ half4 VerticalGaussianBlur(Varyings input) : SV_Target
 // Kawase Blur - Custom
 // ------------------------------------------------------------------
 
-half4 KawaseBlurFilterCustom(Texture2D blurTexture, float2 uv, float offset, float2 texelSize)
+half4 KawaseBlurFilterCustom(float2 uv, float offset, float2 texelSize)
 {
     float i = offset;
 
     half4 col;
 
-    col = SAMPLE(blurTexture, saturate(uv));
-    col += SAMPLE(blurTexture, saturate(uv + float2(i, i) * texelSize));
-    col += SAMPLE(blurTexture, saturate(uv + float2(i, -i) * texelSize));
-    col += SAMPLE(blurTexture, saturate(uv + float2(-i, i) * texelSize));
-    col += SAMPLE(blurTexture, saturate(uv + float2(-i, -i) * texelSize));
+    col = SAMPLE(_BlitTexture, saturate(uv));
+    col += SAMPLE(_BlitTexture, saturate(uv + float2(i, i) * texelSize));
+    col += SAMPLE(_BlitTexture, saturate(uv + float2(i, -i) * texelSize));
+    col += SAMPLE(_BlitTexture, saturate(uv + float2(-i, i) * texelSize));
+    col += SAMPLE(_BlitTexture, saturate(uv + float2(-i, -i) * texelSize));
     col /= 5.0f;
 
     col.a = 1;
@@ -131,7 +132,7 @@ half4 KawaseBlurCustom(Varyings input) : SV_Target
     uv.y = 1.0 - uv.y;
     #endif
 
-    half4 color = KawaseBlurFilterCustom(_BlitTexture, uv, OFFSET, TEXEL_SIZE.xy);
+    half4 color = KawaseBlurFilterCustom(uv, OFFSET, TEXEL_SIZE.xy);
     return color;
 }
 
