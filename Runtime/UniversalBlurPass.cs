@@ -133,7 +133,8 @@ namespace Unified.UniversalBlur.Runtime
                 passData.BlurConfig = _blurConfig;
                 
                 builder.AllowPassCulling(false);
-                
+
+                builder.UseTexture(cameraColorSource, AccessFlags.Read);
                 builder.UseTexture(source, AccessFlags.ReadWrite);
                 builder.UseTexture(destination, AccessFlags.ReadWrite);
                 
