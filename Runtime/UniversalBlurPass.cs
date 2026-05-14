@@ -75,6 +75,13 @@ namespace Unified.UniversalBlur.Runtime
 
             var colorTarget = renderingData.cameraData.renderer.cameraColorTargetHandle;
 
+            if (colorTarget == null || colorTarget.rt == null)
+            {
+                CommandBufferPool.Release(cmd);
+                DrawDefaultTexture();
+                return;
+            }
+
             using (new ProfilingScope(cmd, _profilingSampler))
             {
                 BlurPasses.KawaseExecutePass(new LegacyPassData()
