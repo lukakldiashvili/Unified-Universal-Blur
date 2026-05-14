@@ -1,26 +1,26 @@
 {
-    "name": "com.unify.unified-universal-blur",
-    "displayName": "Unified Blur",
-    "description": "Unified Blur enables you to use translucent blur effect on your canvas.",
-    "version": "0.8.0",
-    "unity": "2022.3",
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/lukakldiashvili/Unified-Universal-Blur.git"
-    },
-    "author": {
-        "name": "Unify - Luka Kldiashvili",
-        "email": "contact@lukakldiashvili.com",
-        "url": "https://github.com/lukakldiashvili"
-    },
-    "dependencies": {
-        "com.unity.render-pipelines.universal": "14.0.9"
-    },
-    "keywords": [
-        "unify",
-        "unified",
-        "blur",
-        "universal"
-    ]
+  "name": "com.unify.unified-universal-blur",
+  "displayName": "Unified Blur",
+  "description": "Unified Blur enables you to use translucent blur effect on your canvas.",
+  "version": "0.9.0",
+  "unity": "2022.3",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lukakldiashvili/Unified-Universal-Blur.git"
+  },
+  "author": {
+    "name": "Unify - Luka Kldiashvili",
+    "email": "contact@lukakldiashvili.com",
+    "url": "https://github.com/lukakldiashvili"
+  },
+  "dependencies": {
+    "com.unity.render-pipelines.universal": "14.0.9"
+  },
+  "keywords": [
+    "unify",
+    "unified",
+    "blur",
+    "universal"
+  ]
 }
