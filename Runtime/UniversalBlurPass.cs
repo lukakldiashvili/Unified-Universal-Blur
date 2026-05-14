@@ -29,6 +29,10 @@ namespace Unified.UniversalBlur.Runtime
         {
             _profilingSampler = new(k_PassName);
             _propertyBlock = new();
+
+#if UNITY_6000_0_OR_NEWER
+            requiresIntermediateTexture = true;
+#endif
         }
 
         public void Setup(BlurConfig blurConfig)
@@ -106,15 +110,15 @@ namespace Unified.UniversalBlur.Runtime
         {
             var resourceData = frameData.Get<UniversalResourceData>();
 
-            if (resourceData.isActiveTargetBackBuffer)
-            {
-                Debug.LogError(
-                    $"Skipping render pass. UniversalBlurPass requires an intermediate ColorTexture, we can't use the BackBuffer as a texture input.");
-                return;
-            }
+            // afterPostProcessColor is [Obsolete] in URP 17.6 and not assigned by the renderer; cameraColor is the supported backbuffer fallback.
+            var cameraColorSource = resourceData.isActiveTargetBackBuffer
+                ? resourceData.cameraColor
+                : resourceData.activeColorTexture;
 
-            var cameraColorSource = resourceData.activeColorTexture;
-            
+            // Depth-only cameras (e.g. offscreen shadow passes) can hand us a null handle here.
+            if (!cameraColorSource.IsValid())
+                return;
+
             var descriptor = new TextureDesc(GetDescriptor());
 
             descriptor.name = k_BlurTextureSourceName;
