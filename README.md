@@ -32,7 +32,7 @@ Designed to be easy to use, efficient, and highly customizable, Unified Blur is 
 ---
 
 <p align="center">
-<a href="#installation">Installation</a> · <a href="#setup">Setup</a> · <a href="#use-cases">Use Cases</a> · <a href="#how-it-works">How It Works</a> · <a href="#limitations">Limitations</a>
+<a href="#installation">Installation</a> · <a href="#setup">Setup</a> · <a href="#use-cases">Use Cases</a> · <a href="#how-it-works">How It Works</a> · <a href="#troubleshooting">Troubleshooting</a> · <a href="#limitations">Limitations</a>
 </p>
 
 ## Installation
@@ -44,7 +44,13 @@ Designed to be easy to use, efficient, and highly customizable, Unified Blur is 
 ## Setup
 
 1. **Add Unified Blur Render Feature**<br>
-   Add `Unified Blur Render Feature` to the renderer data that is being used by the project. This can be done by selecting the renderer data asset and adding the feature in the inspector.
+   Add `Unified Blur Render Feature` to the renderer data asset used by your project. Step by step:
+   1. Open `Project Settings → Graphics` and locate the `Scriptable Render Pipeline Settings` field (this is your URP Asset). Alternatively, open `Project Settings → Quality` and read the URP Asset assigned to the currently active quality level.
+   2. Select the URP Asset in the Project window and look at the `Renderer List` in its inspector. Each entry points to a renderer data asset (e.g. `PC_Renderer`, `Mobile_Renderer`).
+   3. Select the renderer data asset you want to extend in the Project window.
+   4. In the inspector, scroll down to the `Renderer Features` section and click `Add Renderer Feature → Universal Blur Feature`.
+
+   A project can have multiple renderer assets (one per platform/quality level - PC, Mobile, WebGL, etc.). The feature must be added to the renderer asset used by the active quality preset, otherwise the blur will not appear at runtime. If you target multiple platforms, add the feature to each renderer asset that needs the effect (see [Troubleshooting](#troubleshooting)).
 2. **Assign Blur Material to UI Image Component**<br>
     Assign `UniversalBlurUI` material to any UI Image component that you want to display the blurred screen on.
 3. **Play with Settings**<br>
@@ -63,6 +69,25 @@ Designed to be easy to use, efficient, and highly customizable, Unified Blur is 
 ## How It Works
 
 **Unified Blur** works by inserting a custom render pass into the render graph, at a configurable injection point, which copies the back buffer and applies a blur effect to it. Once the pass completes, the blurred result is exposed as a global texture for downstream shaders to sample.
+
+## Troubleshooting
+
+### Blur material shows but no blur effect
+
+- Confirm the `Universal Blur Feature` is added to the renderer data asset used by the **active quality level**. Open `Project Settings → Quality`, check which URP Asset is assigned to the active level, then verify the renderer asset it references is the one carrying the feature. A common pitfall is adding the feature to a desktop renderer while the active quality level points at a mobile renderer (or vice versa).
+- Verify post-processing is enabled on the main camera: select the camera, then in the inspector under `Rendering` make sure `Post Processing` is checked. Without it, the blur pass output may not reach the screen as expected.
+- If the camera renders to a custom render target, make sure the target format is compatible with the blur pass. A mismatched format (e.g. no alpha, unexpected color space) can produce a transparent or blank result.
+
+### WebGL build shows no blur
+
+WebGL builds typically fall back to the **Mobile renderer data**, not the desktop renderer. If you only added `Universal Blur Feature` to the PC renderer, the WebGL build will run without it.
+
+- Open the URP Asset assigned to the WebGL/Mobile quality level, locate its renderer data asset, and add `Universal Blur Feature` to that asset as well.
+- After adding it, rebuild the WebGL player so the updated renderer asset is included.
+
+### Can I configure the blur per-platform?
+
+Yes. Each Quality Level can reference a different URP Asset, and each URP Asset can reference a different renderer data asset. By adding `Universal Blur Feature` to multiple renderer assets, you can tune blur settings (intensity, downsample, iterations) independently per platform or quality preset.
 
 ## Limitations
 
