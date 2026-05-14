@@ -103,6 +103,27 @@ half4 VerticalGaussianBlur(Varyings input) : SV_Target
 // Kawase Blur - Custom
 // ------------------------------------------------------------------
 
+// GLES2 lacks DX-style Texture2D/SamplerState separation; takes sampler2D and uses tex2Dlod.
+// Non-GLES2 path samples _BlitTexture directly via SAMPLE macro (stereo-safe under STEREO_INSTANCING_ON).
+#if SHADER_API_GLES
+half4 KawaseBlurFilterCustom(sampler2D blurTexture, float2 uv, float offset, float2 texelSize)
+{
+    float i = offset;
+
+    half4 col;
+
+    col  = tex2Dlod(blurTexture, float4(saturate(uv), 0, _BlitMipLevel));
+    col += tex2Dlod(blurTexture, float4(saturate(uv + float2(i, i) * texelSize), 0, _BlitMipLevel));
+    col += tex2Dlod(blurTexture, float4(saturate(uv + float2(i, -i) * texelSize), 0, _BlitMipLevel));
+    col += tex2Dlod(blurTexture, float4(saturate(uv + float2(-i, i) * texelSize), 0, _BlitMipLevel));
+    col += tex2Dlod(blurTexture, float4(saturate(uv + float2(-i, -i) * texelSize), 0, _BlitMipLevel));
+    col /= 5.0f;
+
+    col.a = 1;
+
+    return col;
+}
+#else
 half4 KawaseBlurFilterCustom(float2 uv, float offset, float2 texelSize)
 {
     float i = offset;
@@ -120,6 +141,7 @@ half4 KawaseBlurFilterCustom(float2 uv, float offset, float2 texelSize)
 
     return col;
 }
+#endif
 
 half4 KawaseBlurCustom(Varyings input) : SV_Target
 {
@@ -132,7 +154,11 @@ half4 KawaseBlurCustom(Varyings input) : SV_Target
     uv.y = 1.0 - uv.y;
     #endif
 
+    #if SHADER_API_GLES
+    half4 color = KawaseBlurFilterCustom(_BlitTexture, uv, OFFSET, TEXEL_SIZE.xy);
+    #else
     half4 color = KawaseBlurFilterCustom(uv, OFFSET, TEXEL_SIZE.xy);
+    #endif
     return color;
 }
 
