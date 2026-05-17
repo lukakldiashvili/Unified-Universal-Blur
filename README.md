@@ -6,17 +6,14 @@
 
 > A modern screen blur for Unity, built on Render Graph with performance and compatibility in mind.
 
-[![Latest release](https://img.shields.io/github/v/release/lukakldiashvili/Unified-Universal-Blur?label=Latest%20release&style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/releases)
-[![Stars](https://img.shields.io/github/stars/lukakldiashvili/Unified-Universal-Blur?style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/stargazers)
-[![Fork](https://img.shields.io/github/forks/lukakldiashvili/Unified-Universal-Blur?style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/network/members)
-[![Watchers](https://img.shields.io/github/watchers/lukakldiashvili/Unified-Universal-Blur?style=flat-square)](https://github.com/lukakldiashvili/Unified-Universal-Blur/watchers)
+[![Latest release](https://img.shields.io/github/v/release/lukakldiashvili/Unified-Universal-Blur?label=Latest%20release&style=flat-round)](https://github.com/lukakldiashvili/Unified-Universal-Blur/releases)
+<img align="right" alt="URP" src="https://img.shields.io/badge/URP-Yes-green?style=flat-round" style="margin-left: 4px;"/>
+<img align="right" alt="HDRP" src="https://img.shields.io/badge/HDRP-No-red?style=flat-round" style="margin-left: 4px;"/>
+<img align="right" alt="BIRP" src="https://img.shields.io/badge/BIRP-No-red?style=flat-round" style="margin-left: 4px;"/>
 
 
-<img align="left" alt="Supported" src="https://img.shields.io/badge/Compatible With-_2022.3 & Up-yellow?style=flat-square" style="margin-right: 4px;"/>
-<img align="left" alt="Tested with Unity 2022.3.62, 6000.0.72, 6000.3.11, 6000.4.2, 6000.6.0" src="https://img.shields.io/badge/Tested%20with-2022.3.62%20%7C%206000.0.72%20%7C%206000.3.11%20%7C%206000.4.2%20%7C%206000.6.0-green?style=flat-square" style="margin-right: 4px;"/>
-<img align="right" alt="URP" src="https://img.shields.io/badge/URP-Yes-green?style=flat-square" style="margin-left: 4px;"/>
-<img align="right" alt="HDRP" src="https://img.shields.io/badge/HDRP-No-red?style=flat-square" style="margin-left: 4px;"/>
-<img align="right" alt="BIRP" src="https://img.shields.io/badge/BIRP-No-red?style=flat-square" style="margin-left: 4px;"/>
+<img align="left" alt="Supported" src="https://img.shields.io/badge/Compatible With-_2022.3 & Up-yellow?style=flat-round" style="margin-right: 4px;"/>
+<img align="left" alt="Tested with Unity 2022.3.62, 6000.0.72, 6000.3.11, 6000.4.2, 6000.6.0" src="https://img.shields.io/badge/Tested%20with-2022.3.62%20%7C%206000.0.72%20%7C%206000.3.11%20%7C%206000.4.2%20%7C%206000.6.0-green?style=flat-round" style="margin-right: 4px;"/>
 
 <br>
 
